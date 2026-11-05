@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Versionsnummer der Android-Hülle = Laufnummer des GitHub-Builds (für Updates per Neuinstallation)
+def runNo = (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+
+android {
+    namespace 'app.auditmaddin'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'app.auditmaddin'
+        minSdk 29
+        targetSdk 34
+        versionCode runNo
+        versionName "1.0.${runNo}"
+    }
+
+    // Prototyp-Schlüssel: nur für Tests. Vor einer Veröffentlichung durch einen geheimen Schlüssel ersetzen.
+    signingConfigs {
+        proto {
+            storeFile file('../prototype.keystore')
+            storePassword 'auditproto'
+            keyAlias 'audit'
+            keyPassword 'auditproto'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.proto
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

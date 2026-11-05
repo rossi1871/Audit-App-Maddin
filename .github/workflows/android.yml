@@ -1,0 +1,40 @@
+name: Android-App bauen
+
+# Baut die Android-Hülle (APK) und stellt sie unter "Releases" zum Download bereit.
+# Läuft, wenn sich etwas im Ordner android/ ändert, oder von Hand über "Run workflow".
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: APK bauen
+        working-directory: android
+        run: gradle assembleRelease --no-daemon --stacktrace
+      - name: APK umbenennen
+        run: cp android/app/build/outputs/apk/release/app-release.apk audit-app.apk
+      - name: Als Release bereitstellen
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-${{ github.run_number }}
+          name: Android-App ${{ github.run_number }}
+          make_latest: true
+          body: |
+            Android-App (Hülle) für das Audit & Kalkulationstool. Lädt immer die aktuelle Version von audit-maddin.netlify.app.
+            Installation: audit-app.apk auf dem Handy öffnen und "Installieren" wählen.
+          files: audit-app.apk
