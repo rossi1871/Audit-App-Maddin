@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V86</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V87</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -91,7 +91,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=86;
+const VER=87;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -626,12 +626,12 @@ function audDel(o){AUD.delete(o.uid);idb().then(d=>{d.transaction('i','readwrite
 async function trStep(o){if(!o||!o.trPend||o.trBusy||!sttKey())return;const b=await audGet(o);if(!b){o.trPend=false;o.tag='Aufnahme nicht mehr vorhanden, bitte Text ergänzen';R2();return}
  o.trBusy=true;o.tag='Wird in Text umgewandelt …';R2();
  try{const t=await sttCall(b);o.trBusy=false;if(!t){o.trPend=false;o.tag='In der Aufnahme wurde kein Text erkannt';R2();return}
-  if(!o.t||o.t==='Sprachaufnahme (Text noch nicht ergänzt)')o.t=t;else o.t=(o.t+' '+t).trim();o.trPend=false;o.tag='';audDel(o);R2();procText(o)}
+  if(!o.t||o.t==='Sprachaufnahme (Text noch nicht ergänzt)'||o.t===o.srT)o.t=t;else o.t=(o.t+' '+t).trim();delete o.srT;o.trPend=false;o.tag='';audDel(o);R2();procText(o)}
  catch(e){o.trBusy=false;o.tag=e.code==='offline'?'Offline gespeichert, wird bei Verbindung umgewandelt':e.code==='bad_key'?'Spracherkennung: Schlüssel abgelehnt (Einstellungen › KI)':'Umwandlung fehlgeschlagen, wird später erneut versucht';R2()}}
 function trRetry(){if(!sttKey()||!navigator.onLine)return;(S.obs||[]).forEach(o=>{if(o.trPend)trStep(o)})}
 addEventListener('online',()=>setTimeout(trRetry,1500));setTimeout(trRetry,3000);setInterval(trRetry,120000);
 async function vTranscribe(){if(!trCan()||S.vm.trb)return;S.vm.trb=true;const el0=document.getElementById('vt');if(el0)S.vm.live=el0.value;R();
- try{const t=await sttCall(S.vm.blob);if(S.vm){S.vm.live=((S.vm.live?S.vm.live+' ':'')+t).trim();S.vm.trd=true}}
+ try{const t=await sttCall(S.vm.blob);if(S.vm){const cur=(document.getElementById('vt')||{}).value;S.vm.live=S.vm.edited&&cur&&cur.trim()?(cur.trim()+' '+t).trim():t;S.vm.trd=true}}
  catch(e){if(S.vm)S.vm.trerr=true;toast(e.code==='offline'?'Offline: Die Aufnahme wird umgewandelt, sobald wieder Verbindung besteht. Einfach speichern.':e.code==='bad_key'?'Spracherkennung: Schlüssel abgelehnt. Bitte unter Einstellungen › KI prüfen.':'Umwandlung gerade nicht möglich. Einfach speichern, die App versucht es später erneut.')}finally{if(S.vm)S.vm.trb=false;R()}}
 smp().then(()=>R2());
 /* ===== V66: Geführte KI-Einrichtung ===== */
@@ -684,6 +684,7 @@ async function wzTest(raw){const w=S.wz;if(!w||w.busy)return;const key=String(ra
    :['Das hat nicht geklappt',msg.slice(0,140)||'Bitte nochmals versuchen.']}
  finally{w.busy=false;R()}}
 async function wzPaste(){let t='';try{t=await navigator.clipboard.readText()}catch(e){t=''}const el=document.getElementById('wz_k');if(!t&&el)t=el.value;if(!t){S.wz.err=['Einfügen nicht erlaubt','Tippe lange in das Feld darunter und wähle „Einsetzen“. Die App prüft dann automatisch.'];R();return}if(el)el.value=t;wzTest(t)}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='vt'&&S.vm)S.vm.edited=true});
 document.addEventListener('change',e=>{if(e.target&&e.target.id==='wz_exp'&&S.wz)S.wz.exp=e.target.value;if(e.target&&e.target.id==='bakfile'&&e.target.files&&e.target.files[0]){snapNow('import',true);bakImport(e.target.files[0]);e.target.value=''}});
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='wz_k'&&S.wz){const v=e.target.value.trim();if(v.length>30&&wzKind(v))wzTest(v)}});
 
@@ -1112,7 +1113,7 @@ document.addEventListener('click',e=>{
  else if(a==='vstop'){micStop();return}
  else if(a==='vtr'){vTranscribe();return}
  else if(a==='vdrop'){if(S.vm&&S.vm.url)URL.revokeObjectURL(S.vm.url);micCleanup();S.vm=null;}
- else if(a==='vsave'){const v=document.getElementById('vt').value.trim();const bl=S.vm.blob,done=!!S.vm.trd;const o={k:'v',t:v||'Sprachaufnahme (Text noch nicht ergänzt)',audio:S.vm.url,tag:v?'':'Aufnahme lokal gesichert, Text folgt'};S.vm=null;add(o);if(!done&&bl&&sttKey()){o.trPend=true;o.tag='Wird in Text umgewandelt …';audPut(o,bl);setTimeout(()=>trStep(o),0)}else if(v||o.img)procText(o);}
+ else if(a==='vsave'){const v=document.getElementById('vt').value.trim();const bl=S.vm.blob,done=!!S.vm.trd,srT=S.vm.edited?'':v;const o={k:'v',t:v||'Sprachaufnahme (Text noch nicht ergänzt)',audio:S.vm.url,tag:v?'':'Aufnahme lokal gesichert, Text folgt'};S.vm=null;add(o);if(!done&&bl&&sttKey()){o.trPend=true;if(srT)o.srT=srT;o.tag='Wird in Text umgewandelt …';audPut(o,bl);setTimeout(()=>trStep(o),0)}else if(v||o.img)procText(o);}
  else if(a==='photo'){S.oeRep=null;const inp=document.getElementById('pfile');if(inp){inp.value='';inp.click()}return}
  else if(a==='text'){S.txt=true;R();document.getElementById('ta').focus();return}
  else if(a==='txno')S.txt=false;
