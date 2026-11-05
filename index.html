@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V115</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V116</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--fx:0;--lg:hsl(var(--hue) 60% 36%);--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -119,7 +119,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=115;
+const VER=116;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -1023,7 +1023,13 @@ function micFail(e){const n=(e&&e.name)||'Error';S.vm={ph:'err',en:n,devs:[]};R(
 const GEO={last:null,wid:null,wake:null};
 async function geoPerm(){try{if(!navigator.permissions)return'unknown';return(await navigator.permissions.query({name:'geolocation'})).state}catch(e){return'unknown'}}
 function geoGet(maxAge){return new Promise((res,rej)=>{if(!navigator.geolocation)return rej(new Error('none'));if(GEO.last&&Date.now()-GEO.last.t<(maxAge||60000))return res(GEO.last);
- navigator.geolocation.getCurrentPosition(p=>{GEO.last={la:p.coords.latitude,lo:p.coords.longitude,ac:Math.round(p.coords.accuracy),t:Date.now()};res(GEO.last)},rej,{enableHighAccuracy:true,timeout:15000,maximumAge:maxAge||60000})})}
+ const ok=p=>{GEO.last={la:p.coords.latitude,lo:p.coords.longitude,ac:Math.round(p.coords.accuracy),t:Date.now()};res(GEO.last)};
+ /* V116: erst genaues GPS (bis 25 s), bei Zeitüberschreitung ungenauer/zwischengespeicherter Standort (bis 20 s) – wichtig ohne Google-Dienste (GrapheneOS) und drinnen */
+ navigator.geolocation.getCurrentPosition(ok,e=>{if(e&&e.code===1)return rej(e);navigator.geolocation.getCurrentPosition(ok,rej,{enableHighAccuracy:false,timeout:20000,maximumAge:300000})},{enableHighAccuracy:true,timeout:25000,maximumAge:maxAge||60000})})}
+function geoMsg(e){const c=e&&e.code;const an=/Android/i.test(navigator.userAgent),br=/Brave/i.test(navigator.userAgent)||!!navigator.brave,ap=/AuditAppAndroid/.test(navigator.userAgent);const bn=ap?'die Audit-App':br?'Brave':'den Browser';
+ if(c===1)return an?`Standort nicht erlaubt. Prüfe: 1) Android-Einstellungen › Apps › ${ap?'Audit-Tool':br?'Brave':'Browser'} › Berechtigungen › Standort: «Nur während der Nutzung» und «Genauer Standort». 2) ${ap?'':'In '+bn+' links neben der Adresse aufs Symbol tippen › Berechtigungen › Standort erlauben. 3) '}Standort am Handy eingeschaltet.`:'Standort nicht erlaubt. Bitte in den Einstellungen des Browsers den Standort für diese Seite erlauben.';
+ if(c===3)return'Kein GPS-Signal gefunden. Drinnen ist das häufig: ans Fenster oder nach draussen gehen und nochmals versuchen.';
+ return'Standort nicht verfügbar. Ist der Standort am Handy eingeschaltet? Drinnen ans Fenster oder nach draussen gehen.'}
 /* Position zu einem neuen Schritt: nur wenn Standort schon erlaubt ist (keine Nachfrage mitten im Erfassen) */
 async function geoTag(o){try{if(GEO.wid==null&&await geoPerm()!=='granted')return;const g=await geoGet(30000);if(g.ac<=100){o.geo={la:+g.la.toFixed(6),lo:+g.lo.toFixed(6),ac:g.ac};persist&&persist()}}catch(e){}}
 function geoDist(a,b){const R=6371000,r=x=>x*Math.PI/180,dl=r(b.la-a.la),dn=r(b.lo-a.lo);const h=Math.sin(dl/2)**2+Math.cos(r(a.la))*Math.cos(r(b.la))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
@@ -1031,14 +1037,14 @@ function trkStats(T){T=T||[];let L=0;for(let i=1;i<T.length;i++)L+=geoDist(T[i-1
 async function trkStart(){if(!navigator.geolocation){toast('Dieses Gerät liefert keinen Standort.');return}
  S.cur.trk=S.cur.trk||[];S.trkOn=true;R();
  GEO.wid=navigator.geolocation.watchPosition(p=>{const q={la:+p.coords.latitude.toFixed(6),lo:+p.coords.longitude.toFixed(6),ac:Math.round(p.coords.accuracy),t:Date.now()};GEO.last=q;if(q.ac>40)return;const T=S.cur.trk,l=T[T.length-1];if(!l||geoDist(l,q)>=4||q.t-l.t>60000){T.push(q);if(T.length%5===0)persist();const el=document.getElementById('trkst');if(el)el.textContent=trkTxt()}},
-  e=>{S.trkOn=false;if(GEO.wid!=null)navigator.geolocation.clearWatch(GEO.wid);GEO.wid=null;toast(e.code===1?'Standort nicht erlaubt. Bitte im Browser den Standortzugriff für diese Seite erlauben.':'Standort nicht verfügbar.');R()},{enableHighAccuracy:true,maximumAge:5000,timeout:30000});
+  e=>{if(e&&e.code!==1){const el=document.getElementById('trkst');if(el&&!(S.cur.trk||[]).length)el.textContent='Warte auf GPS-Signal … (drinnen ans Fenster oder nach draussen)';return}S.trkOn=false;if(GEO.wid!=null)navigator.geolocation.clearWatch(GEO.wid);GEO.wid=null;S.geoErr=geoMsg(e);R()},{enableHighAccuracy:true,maximumAge:5000,timeout:60000});
  try{if(window.AndroidBridge&&AndroidBridge.keepScreenOn)AndroidBridge.keepScreenOn(true);else if(navigator.wakeLock)GEO.wake=await navigator.wakeLock.request('screen')}catch(e){}}
 function trkStop(){if(GEO.wid!=null)navigator.geolocation.clearWatch(GEO.wid);GEO.wid=null;S.trkOn=false;try{window.AndroidBridge&&AndroidBridge.keepScreenOn&&AndroidBridge.keepScreenOn(false)}catch(e){}try{GEO.wake&&GEO.wake.release()}catch(e){}GEO.wake=null;persist();R()}
 document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&S.trkOn&&navigator.wakeLock){try{GEO.wake=await navigator.wakeLock.request('screen')}catch(e){}}});
 function fmtM(m){return m>=1000?(m/1000).toFixed(2).replace('.',',')+' km':Math.round(m)+' m'}
 function trkTxt(){const st=trkStats(S.cur.trk);return`${st.n} Punkte · Weg ${fmtM(st.len)}${st.area?' · Fläche ca. '+Math.round(st.area).toLocaleString('de-CH')+' m²':''}`}
-function trkBar(){const T=S.cur.trk||[],gs=S.obs.filter(o=>o.geo).length;if(!S.trkOn&&!T.length&&!gs)return`<button class="chip" data-a="trk" style="margin:8px 16px 0">📍 Gelände aufzeichnen</button>`;
- return`<div class="ob" style="margin:8px 16px 0;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:150px"><b style="color:${S.trkOn?'var(--ok)':'var(--ink)'}">${S.trkOn?'● Aufzeichnung läuft':'📍 Gelände'}</b><br><span class="sm" id="trkst">${T.length?trkTxt():gs+' Schritte mit Standort'}</span></span><button class="sec" data-a="geomap">Karte</button><button class="sec" data-a="trk">${S.trkOn?'Stopp':T.length?'Weiter aufzeichnen':'Aufzeichnen'}</button></div>`}
+function trkBar(){const T=S.cur.trk||[],gs=S.obs.filter(o=>o.geo).length;if(!S.trkOn&&!T.length&&!gs)return(S.geoErr?`<div class="ob" style="margin:8px 16px 0;padding:8px 12px;background:var(--yb);border-color:var(--y)"><b style="color:var(--y)">📍 Standort</b><div class="sm">${esc(S.geoErr)}</div><button class="lnk" data-a="geoerrx" style="font-size:13px">Schliessen</button></div>`:'')+`<button class="chip" data-a="trk" style="margin:8px 16px 0">📍 Gelände aufzeichnen</button>`;
+ return(S.geoErr?`<div class="ob" style="margin:8px 16px 0;padding:8px 12px;background:var(--yb);border-color:var(--y)"><b style="color:var(--y)">📍 Standort</b><div class="sm">${esc(S.geoErr)}</div><button class="lnk" data-a="geoerrx" style="font-size:13px">Schliessen</button></div>`:'')+`<div class="ob" style="margin:8px 16px 0;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:150px"><b style="color:${S.trkOn?'var(--ok)':'var(--ink)'}">${S.trkOn?'● Aufzeichnung läuft':'📍 Gelände'}</b><br><span class="sm" id="trkst">${T.length?trkTxt():S.trkOn?'Suche GPS-Signal …':gs+' Schritte mit Standort'}</span></span><button class="sec" data-a="geomap">Karte</button><button class="sec" data-a="trk">${S.trkOn?'Stopp':T.length?'Weiter aufzeichnen':'Aufzeichnen'}</button></div>`}
 function geoMap(){if(!S.geoMap)return'';const st=trkStats(S.cur.trk);
  return`<div class="modal" style="z-index:9"><div style="padding:14px"><button class="ib" data-a="geomapx" aria-label="Schliessen" style="float:right">×</button><h2 style="font-size:20px;margin:4px 0 6px">Gelände-Karte</h2><p class="sm" style="margin:0 0 8px">${st.n?trkTxt():'Noch keine Aufzeichnung.'} Nummern = Schritte mit Standort.</p>
  <div id="gmap" style="height:52vh;border-radius:12px;border:1px solid var(--ln);background:var(--sf2)"></div>
@@ -1061,7 +1067,7 @@ function geoExport(){const F=[];const T=S.cur.trk||[];if(T.length)F.push({type:'
 async function geoAddr(){if(S.geoSug&&S.geoSug.busy)return;S.geoSug={busy:true};R();
  try{const g=await geoGet(60000);const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&lat=${g.la}&lon=${g.lo}&accept-language=${S.lang||'de'}`);const j=await r.json();const a=j.address||{};
   const str=[a.road||a.pedestrian||a.footway||a.path||'',a.house_number||''].join(' ').trim();const sug={str,plz:a.postcode||'',ort:a.city||a.town||a.village||a.municipality||a.hamlet||'',land:a.country||'',ac:g.ac};
-  S.geoSug=sug.str||sug.ort?sug:{err:'Keine Adresse an diesem Standort gefunden.'}}catch(e){S.geoSug={err:e&&e.code===1?'Standort nicht erlaubt.':'Standort nicht verfügbar.'}}if(S.adrForm)R()}
+  S.geoSug=sug.str||sug.ort?sug:{err:'Keine Adresse an diesem Standort gefunden.'}}catch(e){S.geoSug={err:e&&typeof e.code==='number'?geoMsg(e):'Standort gefunden, aber die Adresse konnte nicht abgefragt werden. Internetverbindung prüfen und nochmals versuchen.'}}if(S.adrForm)R()}
 function geoSugBox(){if(!navigator.geolocation)return'';const g=S.geoSug;
  if(!g)return`<button class="chip" data-a="geoaddr" style="margin:2px 0 10px">📍 Adresse vom aktuellen Standort vorschlagen</button>`;
  if(g.busy)return`<p class="sm" style="margin:2px 0 10px">📍 Standort wird ermittelt …</p>`;
@@ -1299,7 +1305,8 @@ document.addEventListener('click',e=>{
  else if(a==='cfxsave'){const f=document.getElementById('cfx');const n=parseFloat(String(f&&f.value||'').replace(',','.'));if(!f||!f.value.trim()){let o={};try{o=JSON.parse(localStorage.getItem('aa_cfx')||'{}')}catch(e){}delete o[baseCur()];try{localStorage.setItem('aa_cfx',JSON.stringify(o))}catch(e){}toast('Automatischer Kurs wird verwendet.')}else if(n>0){let o={};try{o=JSON.parse(localStorage.getItem('aa_cfx')||'{}')}catch(e){}o[baseCur()]=n;try{localStorage.setItem('aa_cfx',JSON.stringify(o))}catch(e){}toast('Umrechnung übernommen.')}else toast('Bitte einen Kurs wie 0.80 eintragen.')}
  else if(a==='geoaddr'){geoAddr();return}
  else if(a==='geouse'){const g=S.geoSug||{};const set=(id,val)=>{const e=document.getElementById(id);if(e&&val){e.value=val;e.dispatchEvent(new Event('input',{bubbles:true}))}};set('a1',g.str);set('a2',g.plz);set('a3',g.ort);if(g.land){S.adrX=S.adrX||{};}S.geoSug=null;const b=document.getElementById('adrsaveb');if(b)b.className='pri';S.adrDirty=true;toast('Adresse übernommen. Bitte prüfen und speichern.');const box=document.querySelector('[data-a=geouse]');if(box)box.closest('.ob').remove();return}
- else if(a==='trk'){if(S.trkOn)trkStop();else trkStart();return}
+ else if(a==='trk'){S.geoErr=null;if(S.trkOn)trkStop();else trkStart();return}
+ else if(a==='geoerrx')S.geoErr=null;
  else if(a==='geomap'){S.geoMap=true;R();setTimeout(geoMapDraw,60);return}
  else if(a==='geomapx')S.geoMap=false;
  else if(a==='geoexp'){geoExport();return}
