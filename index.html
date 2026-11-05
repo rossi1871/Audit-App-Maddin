@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V104</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V105</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -102,8 +102,9 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .go.gc{justify-content:center;border-radius:999px;padding:17px 18px;margin-top:14px}.go.gc b{font-size:20px}.go.gc .ga{font-size:30px}
 .fgw{position:relative}.fgw .fi{padding-left:44px;padding-right:44px}.fgi{position:absolute;left:14px;top:12px;width:20px;height:20px;fill:none;stroke:var(--ac);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .fgc{position:absolute;right:6px;top:4px;width:38px;height:38px;border:0;background:none;display:grid;place-items:center;cursor:pointer}.fgc svg{width:20px;height:20px;fill:none;stroke:var(--mu);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.mby{text-align:center;color:var(--mu);font-size:14px;letter-spacing:.14em;margin:2px 0 8px}
-.rng{display:block;width:150px;height:26px;margin:0 auto 8px;filter:drop-shadow(0 0 10px var(--glow))}
+.mby{text-align:center;color:var(--mu);font-size:14px;letter-spacing:.14em;margin:26px 0 10px}
+.rsep{display:flex;align-items:center;gap:10px;margin:0 0 14px}.rsep span{flex:1;height:1px;background:linear-gradient(90deg,transparent,hsl(var(--hue) 70% 50% / .7))}.rsep span:last-child{background:linear-gradient(90deg,hsl(var(--hue) 70% 50% / .7),transparent)}.rsep i{width:8px;height:8px;transform:rotate(45deg);background:hsl(var(--hue) 90% 62%);box-shadow:0 0 10px hsl(var(--hue) 90% 60% / .8)}
+.rng{display:block;width:150px;height:28px;margin:0 auto 10px;filter:drop-shadow(0 0 3px hsl(var(--hue) 90% 60% / .9)) drop-shadow(0 0 10px hsl(var(--hue) 90% 55% / .5))}
 .lnk{background:none;border:0;padding:4px 0;color:var(--ac);font-weight:600;font-size:15px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.feat>div{border:1px solid var(--ln);background:var(--sf2);border-radius:14px;padding:14px 4px;text-align:center;font-size:14px;font-weight:600;color:var(--ac)}
 .feat svg,.fl svg{width:28px;height:28px;display:block;margin:0 auto 6px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px var(--glow))}
@@ -114,7 +115,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=104;
+const VER=105;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -833,7 +834,7 @@ function tourModal(){const n=S.tour;const st=[
  <div style="display:flex;justify-content:space-between">${n?`<button class="lnk" data-a="tourgo" data-v="${n-1}">‹ Zurück</button>`:'<span></span>'}${last?'':'<button class="lnk" data-a="tourx" style="color:var(--mu)">Überspringen</button>'}</div></div></div></div>`}
 function tourDone(){try{localStorage.setItem('aa_tour','1');localStorage.setItem('aa_wz','1')}catch(e){}}
 setTimeout(()=>{try{if(localStorage.getItem('aa_tour')||S.audits.length||S.wz||S.cfg)return}catch(e){return}S.tour=0;R()},700);
-function madeBy(){return`<div class="sep sd" aria-hidden="true" style="margin-top:24px"><i></i></div><div class="mby" data-nt>made by Maddin</div><svg class="rng" viewBox="0 0 230 40" role="img" aria-label="RANGE"><defs><linearGradient id="rgg" x1="0" x2="1"><stop offset="0" stop-color="hsl(var(--hue) 85% 62%)"/><stop offset="1" stop-color="hsl(calc(var(--hue) + 25) 85% 55%)"/></linearGradient></defs><g fill="none" stroke="url(#rgg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 36V4h16a9 9 0 0 1 0 18H4M14 22l10 14"/><path d="M48 36L62 4l14 32M53 25h18"/><path d="M98 36V4l24 32V4"/><path d="M168 10a16 16 0 1 0 2 16h-12"/><path d="M196 4h28M200 20h24M196 36h28"/></g></svg>`}
+function madeBy(){return`<div class="mby" data-nt>made by Maddin</div><div class="rsep" aria-hidden="true"><span></span><i></i><span></span></div><svg class="rng" viewBox="0 0 212 40" role="img" aria-label="RANGE"><g fill="none" stroke="hsl(var(--hue) 90% 62%)" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 36V4h14a9 9 0 0 1 0 18H4M13 22l11 14"/><path d="M44 36L56 4l12 32"/><path d="M88 36V4l24 32V4"/><path d="M160.3 9.7A16 16 0 1 0 164 20h-13"/><path d="M184 4h24M184 20h22M184 36h24"/></g></svg>`}
 function fgList(id){return`<div class="fgs" id="${id}" hidden></div>`}
 /* V100: eigene Vorschlagsliste fürs Fachgebiet (die eingebaute Browser-Liste fehlt in manchen Browsern und in der Android-App) */
 function fgFind(q){q=(q||'').trim().toLowerCase();if(!q)return[];const R=[];FIELDS.forEach(([l,sy])=>{const n=l.toLowerCase(),al=String(sy||'').split('|');let sc=n.startsWith(q)?0:n.split(/[ \/-]+/).some(w=>w.startsWith(q))?1:al.some(a=>a.startsWith(q))?2:(n.includes(q)||al.some(a=>a.includes(q)))?3:9;if(sc<9)R.push([sc,l])});return R.sort((a,b)=>a[0]-b[0]||a[1].localeCompare(b[1])).slice(0,6).map(x=>x[1])}
