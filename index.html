@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V109</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V110</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--fx:0;--lg:hsl(var(--hue) 60% 36%);--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -82,7 +82,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .pri{box-shadow:0 4px 18px var(--glow)}
 .ob,.cb,.pin,.cnt .n,.feat>div{box-shadow:inset 0 1px 0 hsl(var(--hue) 90% 85% / .1)}
 .sh,.modal>div{border:1px solid var(--ln);border-bottom:0;box-shadow:0 -12px 44px var(--glow)}
-.hero{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding-right:44px}.shield{width:56px;height:56px;flex:none}
+.hero{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding-right:44px}.shield{width:48px;height:48px;flex:none;filter:drop-shadow(0 0 10px var(--glow))}
 .ht{font-size:26px;margin:4px 0 6px}
 .sep{position:relative;height:1px;margin:18px 0 16px;background:linear-gradient(90deg,transparent,var(--ln) 15%,var(--ln) 85%,transparent)}.sep i{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 4px var(--sf),0 0 14px var(--glow)}
 .mby{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--mu);font-size:13px;padding:2px 0 6px}.mby b{color:var(--ink);font-weight:700;letter-spacing:.02em}.mbm{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,hsl(var(--hue) 85% 55%),hsl(calc(var(--hue) + 40) 85% 42%));box-shadow:0 2px 10px var(--glow)}
@@ -119,7 +119,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=109;
+const VER=110;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -814,7 +814,7 @@ function picker(){const hb=S.audits.length||lastProf();return`${hb?`<div class="
 function start(){const lp=lastProf();
  const L=S.audits.slice().reverse(),top=L.slice(0,8);
  const cnt=a=>{const op=(a.obs||[]).reduce((n,o)=>n+(o.hints||[]).filter(h=>h.op&&!h.done).length,0);return`${esc(a.prof&&a.prof!=='Allgemein'?a.prof+' · ':'')}${(a.obs||[]).length} Erfassungen · ${(a.pts||[]).filter(x=>x.st!=='done').length} offene Punkte${op?' · <b style="color:var(--r)">'+op+' OP</b>':''}${a.addr?' · '+esc(fmtA(a.addr)):''}`};
- const head=`<div class="hero"><svg class="shield" viewBox="0 0 64 64" aria-hidden="true"><g class="rngl" fill="none" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter"><path d="M8 4h24l8 8v10"/><path d="M32 4v8h8"/><path d="M8 13v39h14"/><path d="M13 18.5l2.5 2.5 5-5M25 19h10"/><path d="M13 28.5l2.5 2.5 5-5M25 29h4"/><path d="M14 40h6"/><path d="M31.5 31.6A11 11 0 1 1 29.6 44"/><path d="M50 50l8 8"/></g></svg><div class="sub">Audit &amp; Kalkulationstool<br>Prototyp V${VER}</div></div>`;
+ const head=`<div class="hero"><svg class="shield" viewBox="0 0 64 64" aria-hidden="true"><circle cx="26" cy="26" r="19" fill="var(--acb)" stroke="var(--ac)" stroke-width="4"/><path d="M17 20h6M17 27h6M17 34h6" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"/><path d="M26 21l2.5 2.5 5-5M26 32l2.5 2.5 5-5" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 40l16 16" stroke="var(--ac)" stroke-width="8" stroke-linecap="round"/><path d="M14 16a14 14 0 0 1 8-4.5" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2.5" stroke-linecap="round"/></svg><div class="sub">Audit &amp; Kalkulationstool<br>Prototyp V${VER}</div></div>`;
  if(!L.length)return`<div class="bd">${head}<h2 class="ht">Vor Ort erfassen, Berichte und Grobkalkulation sofort erhalten</h2><div class="sep sl" aria-hidden="true"></div><p class="kick">So funktioniert es</p>
  <ol class="stc">${[['«Audit starten» antippen','Gib dem Objekt einen Namen, wenn du magst.',''],['Vor Ort erfassen','Sprechen, fotografieren oder schreiben, in beliebiger Reihenfolge. Jede Erfassung wird ein nummerierter Schritt.',`<svg class="sci" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6a18 18 0 1 1-17.2 12.7" stroke-dasharray="2.5 4.5"/><path d="M34 37l4 4 1-6"/></svg>`],['KI wertet aus, du erhältst den Bericht','Räume, Geräte und Mehraufwand werden erkannt. Bericht und Offerte für Excel und Word.',`<svg class="sci" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 5h17l7 7v25H8z"/><path d="M25 5v7h7"/><path d="M20 17a7 7 0 1 0 7 7h-7z" class="f"/><path d="M13 31h10M13 34h7"/><rect x="26" y="27" width="17" height="15" rx="1.5"/><path d="M26 32h17M26 37h17M32 27v15M38 27v15"/></svg>`]].map(([t,d,ic],i)=>`<li><i>${i+1}</i><span class="stt"><b>${t}</b><span class="sm">${d}</span></span>${ic}</li>`).join('')}</ol>
  <button class="tourb" data-a="tour"><span class="tpl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 7l8 5-8 5z"/></svg></span><span>Kurzer Rundgang (1 Minute)</span></button>
