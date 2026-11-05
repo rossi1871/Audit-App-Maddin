@@ -74,7 +74,7 @@ textarea{width:100%;min-height:80px;border:1.5px solid var(--ac);border-radius:1
 .lbl{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}.big{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.cbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--ln);margin:10px 0 6px}.cbar i{display:block;height:100%}.cl{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:9px 0;border-top:1px solid var(--ln);font-size:14px}.cl small{grid-column:1/-1;color:var(--mu)}.amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.cr{display:flex;gap:8px;align-items:center;margin-top:6px}.cr .fi{padding:8px}.cs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.cs>div{background:var(--sf2);border-radius:10px;padding:10px}.cs b{display:block;font-size:18px}.chip{cursor:pointer}.modal>div{max-height:92%;overflow:auto}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=72;
+const VER=73;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -529,16 +529,23 @@ document.addEventListener('change',e=>{if(e.target&&e.target.id==='wz_exp'&&S.wz
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='wz_k'&&S.wz){const v=e.target.value.trim();if(v.length>30&&wzKind(v))wzTest(v)}});
 
 function R2(){const a=document.activeElement;if(a&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)&&a.id!=='q'){S.needR=true;return}R()}
+const RV={},KEEPX=new Set(['sa','ai_key','q']);
 function R(){
  syncAdr();
  const p=document.getElementById('ph'),d=innerWidth>=900;
+ /* V73: Eingaben, die noch nicht gespeichert sind, bleiben beim Neuzeichnen erhalten */
+ const cap={};p.querySelectorAll('input[id],textarea[id],select[id]').forEach(e=>{if(e.type==='file'||KEEPX.has(e.id))return;cap[e.id]=e.type==='checkbox'||e.type==='radio'?e.checked:e.value});
+ const fa=document.activeElement,fid=fa&&fa.id&&p.contains(fa)?fa.id:null,fs=fid&&fa.selectionStart!=null?[fa.selectionStart,fa.selectionEnd]:null;
  p.innerHTML=({start,search,sub,walk,fin,done,pause,obj,objnew,profsug,calc}[S.sc])()+gearHtml()+cfgSheet()+dlModal()+cfModal()+wzModal();
+ p.querySelectorAll('input[id],textarea[id],select[id]').forEach(e=>{const ck=e.type==='checkbox'||e.type==='radio';const def=ck?e.checked:e.value;
+  if(e.id in cap&&RV[e.id]===def&&cap[e.id]!==def){if(ck)e.checked=cap[e.id];else e.value=cap[e.id]}RV[e.id]=def});
+ if(fid){const e=document.getElementById(fid);if(e&&e!==document.activeElement){try{e.focus({preventScroll:true});if(fs&&e.setSelectionRange)e.setSelectionRange(fs[0],fs[1])}catch(x){}}}
  snapLazy();
  const sd=document.getElementById('side');
  sd.className=(d&&S.sc==='walk'&&S.side)?'on':'';
  sd.innerHTML=sd.className?`<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:20px">Offene Punkte</h2><button class="ib" data-a="side">ausblenden</button></div>`+pts():'';
  if(S.sc==='search'){const i=p.querySelector('input');i.focus();i.addEventListener('input',()=>{p.querySelector('#res').innerHTML=res(i.value);p.querySelector('#x').style.visibility=i.value?'visible':'hidden'});}
- if(S.adrForm)document.getElementById(S.adrFocus||'a1')?.focus();
+ if(S.adrForm&&(!R.adrWas||S.adrFocus!==R.adrF)&&!fid)document.getElementById(S.adrFocus||'a1')?.focus();R.adrWas=!!S.adrForm;R.adrF=S.adrFocus;
  if(S.sc==='objnew')document.getElementById('on')?.focus();
  persist();
 }
