@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V94</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V95</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -91,7 +91,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=94;
+const VER=95;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -177,6 +177,8 @@ function sttCfg(){const s2=STT(),own=!!s2.key,viaMain=false;
  <div class="act"><button class="sec" data-a="sttsave" style="font-weight:600"${S.sttTest?' disabled':''}>${S.sttTest?'Wird geprüft …':'Speichern und prüfen'}</button>${own?'<button class="sec" data-a="sttdel">Schlüssel entfernen</button>':''}<a class="sec" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" style="text-decoration:none;color:var(--ink)">Schlüssel bei OpenAI erstellen ↗</a></div>
  ${S.sttErr?`<div class="ob" style="background:var(--rb);border-color:var(--r);margin-top:8px"><b style="color:var(--r)">Nicht gespeichert</b><div class="sm" data-nt>${esc(S.sttErr)}</div></div>`:''}`,!!S.sttErr,own||viaMain)}
 async function sttSave(){const f=document.getElementById('stt_key');const v=(f&&f.value||'').trim().replace(/\s+/g,'');const keep=STT().key?' Dein bisheriger Schlüssel bleibt aktiv.':'';
+ const ms=document.getElementById('stt_m');if(ms){try{localStorage.setItem('aa_sttm',ms.value)}catch(e){}}
+ if(!v&&STT().key){S.sttErr='';(S.acc=S.acc||{}).stt=false;toast('Gespeichert. Dein Schlüssel bleibt unverändert, Modell: '+sttModel()+'.');R();return}
  if(!v){S.sttErr='Bitte einen Schlüssel eintragen.'+keep;R();return}
  if(/^sk-ant-/.test(v)){S.sttErr='Das ist ein Claude-Schlüssel. Für die Spracherkennung braucht es einen Schlüssel von OpenAI.'+keep;R();return}
  if(!/^sk-/.test(v)||v.length<30){S.sttErr='Das ist kein gültiger Schlüssel. Ein OpenAI-Schlüssel beginnt mit „sk-“ und ist sehr lang.'+keep;R();return}
