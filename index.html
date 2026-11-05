@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V103</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V104</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -89,6 +89,21 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hst{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:10px}.hst li{display:flex;gap:12px;align-items:flex-start}.hst i{font-style:normal;flex:none;width:28px;height:28px;border-radius:50%;background:var(--acb);color:var(--ac);display:grid;place-items:center;font-weight:700;font-size:14px;border:1px solid var(--ac)}
 .tbi{flex:none;width:40px;height:40px;border-radius:12px;background:var(--sf2);border:1px solid var(--ln);display:grid;place-items:center;color:var(--ac)}.tbi svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .fgs{margin-top:4px;border:1px solid var(--ln);border-radius:12px;background:var(--sf);overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35)}.fgs button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--ln);padding:11px 14px;color:var(--ink);font-size:15px;cursor:pointer}.fgs button:first-child{border-top:0}.fgs button:active{background:var(--acb)}
+.kick{margin:0 0 10px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;font-size:12px;color:var(--ac)}
+.sep.sl{margin:16px 0 18px;background:var(--ln)}
+.sep.sd i{width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:1px;transform:rotate(45deg)}
+.stc{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.stc li{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--ln);border-radius:16px;background:var(--sf2);box-shadow:inset 0 1px 0 hsl(var(--hue) 90% 85% / .06)}
+.stc i{font-style:normal;flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:17px;color:#fff;background:radial-gradient(circle at 35% 30%,hsl(var(--hue) 90% 68%),hsl(var(--hue) 85% 42%));box-shadow:0 0 0 3px hsl(var(--hue) 85% 50% / .18),0 0 18px var(--glow)}
+.stt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.stt b{font-size:16px}
+.sci{flex:none;width:44px;height:44px;fill:none;stroke:var(--ac);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.9}.sci .f{fill:var(--acb)}
+.tourb{display:flex;align-items:center;gap:12px;background:none;border:0;padding:12px 0 4px;color:var(--ac);font-size:16px;cursor:pointer}
+.tpl{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--ln);display:grid;place-items:center}.tpl svg{width:16px;height:16px;fill:var(--ac);margin-left:2px}
+.go.gc{justify-content:center;border-radius:999px;padding:17px 18px;margin-top:14px}.go.gc b{font-size:20px}.go.gc .ga{font-size:30px}
+.fgw{position:relative}.fgw .fi{padding-left:44px;padding-right:44px}.fgi{position:absolute;left:14px;top:12px;width:20px;height:20px;fill:none;stroke:var(--ac);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.fgc{position:absolute;right:6px;top:4px;width:38px;height:38px;border:0;background:none;display:grid;place-items:center;cursor:pointer}.fgc svg{width:20px;height:20px;fill:none;stroke:var(--mu);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mby{text-align:center;color:var(--mu);font-size:14px;letter-spacing:.14em;margin:2px 0 8px}
+.rng{display:block;width:150px;height:26px;margin:0 auto 8px;filter:drop-shadow(0 0 10px var(--glow))}
 .lnk{background:none;border:0;padding:4px 0;color:var(--ac);font-weight:600;font-size:15px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.feat>div{border:1px solid var(--ln);background:var(--sf2);border-radius:14px;padding:14px 4px;text-align:center;font-size:14px;font-weight:600;color:var(--ac)}
 .feat svg,.fl svg{width:28px;height:28px;display:block;margin:0 auto 6px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px var(--glow))}
@@ -99,7 +114,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=103;
+const VER=104;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -795,13 +810,13 @@ function start(){const lp=lastProf();
  const L=S.audits.slice().reverse(),top=L.slice(0,8);
  const cnt=a=>{const op=(a.obs||[]).reduce((n,o)=>n+(o.hints||[]).filter(h=>h.op&&!h.done).length,0);return`${esc(a.prof&&a.prof!=='Allgemein'?a.prof+' · ':'')}${(a.obs||[]).length} Erfassungen · ${(a.pts||[]).filter(x=>x.st!=='done').length} offene Punkte${op?' · <b style="color:var(--r)">'+op+' OP</b>':''}${a.addr?' · '+esc(fmtA(a.addr)):''}`};
  const head=`<div class="hero"><svg class="shield" viewBox="0 0 64 64" aria-hidden="true"><circle cx="26" cy="26" r="19" fill="var(--acb)" stroke="var(--ac)" stroke-width="4"/><path d="M17 20h6M17 27h6M17 34h6" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"/><path d="M26 21l2.5 2.5 5-5M26 32l2.5 2.5 5-5" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 40l16 16" stroke="var(--ac)" stroke-width="8" stroke-linecap="round"/><path d="M14 16a14 14 0 0 1 8-4.5" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2.5" stroke-linecap="round"/></svg><div class="sub">Audit &amp; Kalkulationstool<br>Prototyp V${VER}</div></div>`;
- if(!L.length)return`<div class="bd">${head}<h2 class="ht">Vor Ort erfassen, Berichte und Grobkalkulation sofort erhalten</h2><div class="sep" aria-hidden="true"><i></i></div><p class="sm" style="margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;font-size:12px">So funktioniert es</p>
- <ol class="hst">${[['«Audit starten» antippen','Gib dem Objekt einen Namen, wenn du magst.'],['Vor Ort erfassen','Sprechen, fotografieren oder schreiben, in beliebiger Reihenfolge. Jede Erfassung wird ein nummerierter Schritt.'],['KI wertet aus, du erhältst den Bericht','Räume, Geräte und Mehraufwand werden erkannt. Bericht und Offerte für Excel und Word.']].map(([t,d],i)=>`<li><i>${i+1}</i><span><b>${t}</b><br><span class="sm">${d}</span></span></li>`).join('')}</ol>
- <button class="lnk" data-a="tour" style="margin:0 0 12px">▶ Kurzer Rundgang (1 Minute)</button>
- <button class="go" data-a="hnew"><b>Audit starten</b><span class="ga" aria-hidden="true">+</span></button>
- <div class="sep" aria-hidden="true"><i></i></div><label class="sm" for="fg" style="display:block;margin:0 0 4px">Dein Fachgebiet (freiwillig, hilft der KI am Anfang)</label><input id="fg" class="fi" data-fg="1" autocomplete="off" enterkeyhint="done" value="${lp&&lp.p!=='Allgemein'?esc(lp.p):''}" placeholder="z. B. Elektro, Telekom, Maler">${fgList('fgl')}
+ if(!L.length)return`<div class="bd">${head}<h2 class="ht">Vor Ort erfassen, Berichte und Grobkalkulation sofort erhalten</h2><div class="sep sl" aria-hidden="true"></div><p class="kick">So funktioniert es</p>
+ <ol class="stc">${[['«Audit starten» antippen','Gib dem Objekt einen Namen, wenn du magst.',''],['Vor Ort erfassen','Sprechen, fotografieren oder schreiben, in beliebiger Reihenfolge. Jede Erfassung wird ein nummerierter Schritt.',`<svg class="sci" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6a18 18 0 1 1-17.2 12.7" stroke-dasharray="2.5 4.5"/><path d="M34 37l4 4 1-6"/></svg>`],['KI wertet aus, du erhältst den Bericht','Räume, Geräte und Mehraufwand werden erkannt. Bericht und Offerte für Excel und Word.',`<svg class="sci" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 5h17l7 7v25H8z"/><path d="M25 5v7h7"/><path d="M20 17a7 7 0 1 0 7 7h-7z" class="f"/><path d="M13 31h10M13 34h7"/><rect x="26" y="27" width="17" height="15" rx="1.5"/><path d="M26 32h17M26 37h17M32 27v15M38 27v15"/></svg>`]].map(([t,d,ic],i)=>`<li><i>${i+1}</i><span class="stt"><b>${t}</b><span class="sm">${d}</span></span>${ic}</li>`).join('')}</ol>
+ <button class="tourb" data-a="tour"><span class="tpl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 7l8 5-8 5z"/></svg></span><span>Kurzer Rundgang (1 Minute)</span></button>
+ <button class="go gc" data-a="hnew"><span class="ga" aria-hidden="true">+</span><b>Audit starten</b></button>
+ <label class="sm" for="fg" style="display:block;margin:18px 0 6px">Dein Fachgebiet (freiwillig, hilft der KI am Anfang)</label><div class="fgw"><svg class="fgi" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg><input id="fg" class="fi" data-fg="1" autocomplete="off" enterkeyhint="done" value="${lp&&lp.p!=='Allgemein'?esc(lp.p):''}" placeholder="z. B. Elektro, Telekom, Maler"><button class="fgc" data-a="fgall" aria-label="Alle Fachgebiete zeigen" tabindex="-1"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>${fgList('fgl')}</div>
  <p class="sm" style="text-align:center;margin-top:16px">Keine Registrierung nötig. Alle Daten bleiben zunächst auf deinem Gerät.</p>${madeBy()}</div>`;
- return`<div class="bd">${head}<button class="go" data-a="hnew"><b>Audit NEU</b><span class="ga" aria-hidden="true">+</span></button>
+ return`<div class="bd">${head}<button class="go gc" data-a="hnew"><span class="ga" aria-hidden="true">+</span><b>Audit NEU</b></button>
  <h2 style="font-size:18px;margin:20px 0 4px">Letzte Audits</h2>
  ${top.map(a=>`<button class="li" data-a="swpick" data-v="${a.id}"><span><b>${esc(a.name)}</b> ${a.st==='done'?'<span class="tag">abgeschlossen</span>':'<span class="tag w">pausiert</span>'}<br><span class="sm">${cnt(a)}</span></span><span>›</span></button>`).join('')}
  ${L.length>top.length?`<button class="sec" data-a="sw" style="width:100%;margin-top:12px">Alle Audits <span>(${L.length})</span></button>`:''}
@@ -818,16 +833,17 @@ function tourModal(){const n=S.tour;const st=[
  <div style="display:flex;justify-content:space-between">${n?`<button class="lnk" data-a="tourgo" data-v="${n-1}">‹ Zurück</button>`:'<span></span>'}${last?'':'<button class="lnk" data-a="tourx" style="color:var(--mu)">Überspringen</button>'}</div></div></div></div>`}
 function tourDone(){try{localStorage.setItem('aa_tour','1');localStorage.setItem('aa_wz','1')}catch(e){}}
 setTimeout(()=>{try{if(localStorage.getItem('aa_tour')||S.audits.length||S.wz||S.cfg)return}catch(e){return}S.tour=0;R()},700);
-function madeBy(){return`<div class="sep" aria-hidden="true" style="margin-top:22px"><i></i></div><div class="mby"><span class="mbm" aria-hidden="true">M</span><span>made by <b data-nt>Maddin</b></span></div>`}
+function madeBy(){return`<div class="sep sd" aria-hidden="true" style="margin-top:24px"><i></i></div><div class="mby" data-nt>made by Maddin</div><svg class="rng" viewBox="0 0 230 40" role="img" aria-label="RANGE"><defs><linearGradient id="rgg" x1="0" x2="1"><stop offset="0" stop-color="hsl(var(--hue) 85% 62%)"/><stop offset="1" stop-color="hsl(calc(var(--hue) + 25) 85% 55%)"/></linearGradient></defs><g fill="none" stroke="url(#rgg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 36V4h16a9 9 0 0 1 0 18H4M14 22l10 14"/><path d="M48 36L62 4l14 32M53 25h18"/><path d="M98 36V4l24 32V4"/><path d="M168 10a16 16 0 1 0 2 16h-12"/><path d="M196 4h28M200 20h24M196 36h28"/></g></svg>`}
 function fgList(id){return`<div class="fgs" id="${id}" hidden></div>`}
 /* V100: eigene Vorschlagsliste fürs Fachgebiet (die eingebaute Browser-Liste fehlt in manchen Browsern und in der Android-App) */
 function fgFind(q){q=(q||'').trim().toLowerCase();if(!q)return[];const R=[];FIELDS.forEach(([l,sy])=>{const n=l.toLowerCase(),al=String(sy||'').split('|');let sc=n.startsWith(q)?0:n.split(/[ \/-]+/).some(w=>w.startsWith(q))?1:al.some(a=>a.startsWith(q))?2:(n.includes(q)||al.some(a=>a.includes(q)))?3:9;if(sc<9)R.push([sc,l])});return R.sort((a,b)=>a[0]-b[0]||a[1].localeCompare(b[1])).slice(0,6).map(x=>x[1])}
-function fgShow(inp){const box=inp&&inp.parentNode&&inp.parentNode.querySelector('.fgs');if(!box)return;const L=fgFind(inp.value);if(!L.length||L.length===1&&L[0].toLowerCase()===inp.value.trim().toLowerCase()){box.hidden=true;box.innerHTML='';return}
- box.innerHTML=L.map(l=>`<button type="button" data-fgv="${esc(l)}">${esc(l)}</button>`).join('');box.hidden=false}
+function fgShow(inp,all){const box=inp&&inp.parentNode&&inp.parentNode.querySelector('.fgs');if(!box)return;const L=all?FIELDS.map(f=>f[0]).sort((a,b)=>a.localeCompare(b,'de')):fgFind(inp.value);if(!L.length||L.length===1&&L[0].toLowerCase()===inp.value.trim().toLowerCase()){box.hidden=true;box.innerHTML='';return}
+ box.innerHTML=L.map(l=>`<button type="button" data-fgv="${esc(l)}">${esc(l)}</button>`).join('');box.style.maxHeight=all?'280px':'';box.style.overflowY=all?'auto':'';box.hidden=false}
 addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.fg)fgShow(e.target)});
 addEventListener('focusin',e=>{if(e.target&&e.target.dataset&&e.target.dataset.fg&&e.target.value)fgShow(e.target)});
-addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-fgv]');if(b){e.preventDefault();const box=b.parentNode,inp=box.parentNode.querySelector('[data-fg]');if(inp){inp.value=b.dataset.fgv;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))}box.hidden=true;box.innerHTML='';return}
- if(!(e.target&&e.target.closest&&e.target.closest('[data-fg]')))document.querySelectorAll('.fgs').forEach(x=>{x.hidden=true})},true);
+addEventListener('pointerdown',e=>{const c=e.target&&e.target.closest&&e.target.closest('.fgc');if(c){e.preventDefault();const inp=c.parentNode.querySelector('[data-fg]'),box=c.parentNode.querySelector('.fgs');if(box&&!box.hidden){box.hidden=true}else fgShow(inp,true);return}
+ const b=e.target&&e.target.closest&&e.target.closest('[data-fgv]');if(b){e.preventDefault();const box=b.parentNode,inp=box.parentNode.querySelector('[data-fg]');if(inp){inp.value=b.dataset.fgv;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))}box.hidden=true;box.innerHTML='';return}
+ if(!(e.target&&e.target.closest&&e.target.closest('[data-fg],.fgs')))document.querySelectorAll('.fgs').forEach(x=>{x.hidden=true})},true);
 function res(q0){const t=q0.trim();const q=norm(t);if(!q)return'';
  const hit=x=>{const n=norm(x);return n.startsWith(q)||n.split(/[\s\/\-]+/).some(w=>w.startsWith(q))||(q.length>=4&&n.includes(q))};
  const m=FIELDS.map(([l,sy])=>{const lm=hit(l);const via=lm?null:sy.split('|').find(hit);return(lm||via)?[l,via]:null}).filter(Boolean);
@@ -1200,6 +1216,7 @@ document.addEventListener('click',e=>{
  else if(a==='geomapx')S.geoMap=false;
  else if(a==='geoexp'){geoExport();return}
  else if(a==='trkdel'){if(S.trkOn)trkStop();S.cur.trk=[];persist();S.geoMap=false;toast('Aufzeichnung gelöscht. Die Standorte der Schritte bleiben.')}
+ else if(a==='fgall')return;
  else if(a==='tour'){S.tour=0;S.cfg=false}
  else if(a==='tourgo')S.tour=+v;
  else if(a==='tourx'){S.tour=null;tourDone()}
