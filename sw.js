@@ -1,4 +1,4 @@
-const C='audit-v89';
+const C='audit-v90';
 const CORE=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
 const LIBS=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js','https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(CORE).then(()=>Promise.all(LIBS.map(u=>c.add(u).catch(()=>{}))))).then(()=>self.skipWaiting()))});
