@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V74</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V75</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -79,7 +79,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .pri{box-shadow:0 4px 18px var(--glow)}
 .ob,.cb,.pin,.cnt .n,.feat>div{box-shadow:inset 0 1px 0 hsl(var(--hue) 90% 85% / .1)}
 .sh,.modal>div{border:1px solid var(--ln);border-bottom:0;box-shadow:0 -12px 44px var(--glow)}
-.hero{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding-right:44px}.shield{width:44px;height:50px;flex:none;filter:drop-shadow(0 0 10px var(--glow))}
+.hero{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding-right:44px}.shield{width:48px;height:48px;flex:none;filter:drop-shadow(0 0 10px var(--glow))}
 .ht{font-size:26px;margin:4px 0 6px}
 .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.feat>div{border:1px solid var(--ln);background:var(--sf2);border-radius:14px;padding:14px 4px;text-align:center;font-size:14px;font-weight:600;color:var(--ac)}
 .feat svg,.fl svg{width:28px;height:28px;display:block;margin:0 auto 6px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px var(--glow))}
@@ -90,7 +90,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=74;
+const VER=75;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -590,7 +590,7 @@ function picker(){const hb=S.audits.length||lastProf();return`${hb?`<div class="
 function start(){const lp=lastProf();
  const L=S.audits.slice().reverse(),top=L.slice(0,8);
  const cnt=a=>`${esc(a.prof&&a.prof!=='Allgemein'?a.prof+' · ':'')}${(a.obs||[]).length} Erfassungen · ${(a.pts||[]).filter(x=>x.st!=='done').length} offene Punkte${a.addr?' · '+esc(fmtA(a.addr)):''}`;
- const head=`<div class="hero"><svg class="shield" viewBox="0 0 64 72" aria-hidden="true"><path d="M32 3 58 13v20c0 17-11 30-26 36C17 63 6 50 6 33V13z" fill="var(--acb)" stroke="var(--ac)" stroke-width="3" stroke-linejoin="round"/><path d="M20 36l8 8 16-17" fill="none" stroke="var(--ac)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="sub">Audit &amp; Kalkulationstool<br>Prototyp V${VER}</div></div>`;
+ const head=`<div class="hero"><svg class="shield" viewBox="0 0 64 64" aria-hidden="true"><circle cx="26" cy="26" r="19" fill="var(--acb)" stroke="var(--ac)" stroke-width="4"/><path d="M17 20h6M17 27h6M17 34h6" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"/><path d="M26 21l2.5 2.5 5-5M26 32l2.5 2.5 5-5" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 40l16 16" stroke="var(--ac)" stroke-width="8" stroke-linecap="round"/><path d="M14 16a14 14 0 0 1 8-4.5" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2.5" stroke-linecap="round"/></svg><div class="sub">Audit &amp; Kalkulationstool<br>Prototyp V${VER}</div></div>`;
  if(!L.length)return`<div class="bd">${head}<h2 class="ht">Vor Ort erfassen, Bericht und Offerte erhalten</h2><p class="sm" style="margin:0">So funktioniert es:</p>
  <div class="feat"><div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Sprechen</span></div><div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Fotografieren</span></div><div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span>Schreiben</span></div></div>
  <div class="fl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4zM19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span>KI ordnet und erkennt Mehraufwand</span></div><div class="fl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg><span>Bericht für Excel und Word</span></div>
