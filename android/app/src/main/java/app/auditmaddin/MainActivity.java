@@ -226,6 +226,76 @@ public class MainActivity extends Activity {
             }
         }
 
+        /** Bericht teilen: Dateien in «Downloads/Audit» ablegen und an Mail, Signal, Teams usw. übergeben. */
+        @JavascriptInterface
+        public boolean shareFiles(String json) {
+            try {
+                org.json.JSONObject o = new org.json.JSONObject(json);
+                org.json.JSONArray fs = o.optJSONArray("files");
+                ArrayList<Uri> uris = new ArrayList<>();
+                if (fs != null) {
+                    for (int i = 0; i < fs.length(); i++) {
+                        org.json.JSONObject f = fs.getJSONObject(i);
+                        byte[] bytes = Base64.decode(f.getString("b64"), Base64.DEFAULT);
+                        ContentValues cv = new ContentValues();
+                        cv.put(MediaStore.Downloads.DISPLAY_NAME, f.getString("name"));
+                        cv.put(MediaStore.Downloads.MIME_TYPE, f.optString("mime", "application/octet-stream"));
+                        cv.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Audit");
+                        Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                        if (u == null) continue;
+                        try (OutputStream os = getContentResolver().openOutputStream(u)) { os.write(bytes); }
+                        uris.add(u);
+                    }
+                }
+                Intent send;
+                if (uris.size() > 1) {
+                    send = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                    send.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+                    send.setType("*/*");
+                } else if (uris.size() == 1) {
+                    send = new Intent(Intent.ACTION_SEND);
+                    send.putExtra(Intent.EXTRA_STREAM, uris.get(0));
+                    send.setType(fs.getJSONObject(0).optString("mime", "*/*"));
+                } else {
+                    send = new Intent(Intent.ACTION_SEND);
+                    send.setType("text/plain");
+                }
+                send.putExtra(Intent.EXTRA_SUBJECT, o.optString("subject", ""));
+                send.putExtra(Intent.EXTRA_TEXT, o.optString("text", ""));
+                send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                final Intent chooser = Intent.createChooser(send, "Bericht senden");
+                chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                runOnUiThread(() -> startActivity(chooser));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        /** Links wie mailto: öffnen; false, wenn keine passende App installiert ist. */
+        @JavascriptInterface
+        public boolean openUrl(String url) {
+            try {
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                if (i.resolveActivity(getPackageManager()) == null) return false;
+                runOnUiThread(() -> startActivity(i));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public boolean copyText(String text) {
+            try {
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("Audit", text));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
         @JavascriptInterface
         public void keepScreenOn(boolean on) {
             runOnUiThread(() -> {
