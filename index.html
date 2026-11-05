@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V67</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V68</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--bg:#e9edf0;--sf:#fff;--sf2:#f3f6f8;--ink:#13202b;--mu:#586674;--ln:#d5dce2;--ac:#0f5c6e;--acb:#d9edf1;--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -72,7 +72,7 @@ textarea{width:100%;min-height:80px;border:1.5px solid var(--ac);border-radius:1
 .lbl{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}.big{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.cbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--ln);margin:10px 0 6px}.cbar i{display:block;height:100%}.cl{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:9px 0;border-top:1px solid var(--ln);font-size:14px}.cl small{grid-column:1/-1;color:var(--mu)}.amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.cr{display:flex;gap:8px;align-items:center;margin-top:6px}.cr .fi{padding:8px}.cs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.cs>div{background:var(--sf2);border-radius:10px;padding:10px}.cs b{display:block;font-size:18px}.chip{cursor:pointer}.modal>div{max-height:92%;overflow:auto}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=67;
+const VER=68;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>S.objs.length?'obj':'walk';
@@ -434,7 +434,7 @@ async function exDocx(){let Z;S.exBusy=true;R();try{Z=await loadLib('https://cdn
  const blob=await z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});await saveFile(fileBase()+'.docx',blob)}
  catch(e){toast('Der Word-Export ist fehlgeschlagen.')}finally{S.exBusy=false;R()}}
 /* Einstellungen: KI-Verbindung */
-function aiCfg(){const k=AIK()||{};const p=S.aiP||k.p||'anthropic';const same=k.p===p;
+function aiCfg(){if(SMPv)return`<h3 style="font-size:15px;margin:14px 0 2px">KI-Verbindung</h3><div class="ob" style="background:var(--acb);border-color:var(--ac);margin-top:8px"><b style="color:var(--ac)">✓ Claude ist verbunden</b><div class="sm" style="margin-top:4px">In dieser Ansicht läuft die KI über dein Claude-Konto. Hier brauchst du keinen Schlüssel, und hier kann auch keiner eingetragen werden.</div></div><p class="sm" style="margin:10px 0 0">Deinen API-Schlüssel trägst du in der installierten App auf dem Handy oder Computer ein (Symbol auf dem Home-Bildschirm).</p>`;const k=AIK()||{};const p=S.aiP||k.p||'anthropic';const same=k.p===p;
  return`${SMPv?'':`<button class="pri" data-a="cfgai" style="width:100%;margin:12px 0 4px">${k.key?'Schlüssel neu einrichten (geführt)':'KI einrichten (geführt, ca. 3 Minuten)'}</button>`}<h3 style="font-size:15px;margin:14px 0 2px">KI-Verbindung${SMPv?'':' (für Fortgeschrittene)'}</h3><p class="sm" style="margin:0 0 8px">${SMPv?'In dieser Ansicht ist Claude bereits verbunden. Einen eigenen Schlüssel brauchst du nur für die App ausserhalb von Claude.':'Für die Auswertung braucht die App einen KI-Anbieter. Trage deinen eigenen API-Schlüssel ein.'}</p>
  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><button class="chip${p==='anthropic'?' on':''}" data-a="aip" data-v="anthropic">Anthropic (Claude)</button><button class="chip${p==='openai'?' on':''}" data-a="aip" data-v="openai">OpenAI (ChatGPT)</button></div>
  <label class="sm" for="ai_key">API-Schlüssel</label><input id="ai_key" class="fi" type="password" autocomplete="off" placeholder="${same&&k.key?'Gespeichert, endet auf '+esc(k.key.slice(-4)):p==='openai'?'sk-…':'sk-ant-…'}">
