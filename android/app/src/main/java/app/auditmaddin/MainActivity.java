@@ -199,6 +199,33 @@ public class MainActivity extends Activity {
             }
         }
 
+        /** Automatische Sicherung: immer dieselbe Datei in «Downloads» überschreiben. */
+        @JavascriptInterface
+        public boolean saveOver(String name, String base64, String mime) {
+            byte[] bytes;
+            try { bytes = Base64.decode(base64, Base64.DEFAULT); } catch (Exception e) { return false; }
+            android.content.SharedPreferences sp = getSharedPreferences("bak", MODE_PRIVATE);
+            String known = sp.getString("uri_" + name, null);
+            if (known != null) {
+                try (OutputStream os = getContentResolver().openOutputStream(Uri.parse(known), "wt")) {
+                    if (os != null) { os.write(bytes); return true; }
+                } catch (Exception e) { /* Datei gelöscht oder nicht mehr erreichbar: neu anlegen */ }
+            }
+            try {
+                ContentValues cv = new ContentValues();
+                cv.put(MediaStore.Downloads.DISPLAY_NAME, name);
+                cv.put(MediaStore.Downloads.MIME_TYPE, mime == null || mime.isEmpty() ? "application/json" : mime);
+                cv.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                if (u == null) return false;
+                try (OutputStream os = getContentResolver().openOutputStream(u)) { os.write(bytes); }
+                sp.edit().putString("uri_" + name, u.toString()).apply();
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
         @JavascriptInterface
         public void keepScreenOn(boolean on) {
             runOnUiThread(() -> {
