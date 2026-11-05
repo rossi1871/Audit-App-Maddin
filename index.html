@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V114</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V115</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--fx:0;--lg:hsl(var(--hue) 60% 36%);--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -119,7 +119,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=114;
+const VER=115;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -648,11 +648,16 @@ async function autoBak(force){try{if(!(window.AndroidBridge&&AndroidBridge.saveO
  const b64=btoa(unescape(encodeURIComponent(js)));if(AndroidBridge.saveOver('Audit-Sicherung-automatisch.json',b64,'application/json')){ABAK_T=Date.now();ABAK_H=h;try{localStorage.setItem('aa_lastexp',Date.now())}catch(e){}}}catch(e){}}
 setInterval(()=>autoBak(false),60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')autoBak(false)});
-async function bakExport(){const {L,data}=await bakData();const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
- const fn='audit-sicherung-'+new Date().toISOString().slice(0,10)+'.json';
- if(window.AndroidBridge&&AndroidBridge.save){await saveFile(fn,blob);try{localStorage.setItem('aa_lastexp',Date.now())}catch(e){}R();return}
- try{const f=new File([blob],fn,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})&&/iPhone|iPad|Android/i.test(navigator.userAgent)){await navigator.share({files:[f],title:fn});}else{const u=URL.createObjectURL(blob);const el=document.createElement('a');el.href=u;el.download=fn;document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
-  try{localStorage.setItem('aa_lastexp',Date.now())}catch(e){}toast('Sicherungsdatei erstellt: '+L.length+(L.length===1?' Audit.':' Audits.'));R()}catch(e){if(e&&e.name==='AbortError')return;toast('Sicherungsdatei konnte nicht erstellt werden.')}}
+async function bakExport(){toast('Sicherungsdatei wird erstellt …');
+ const dl=(blob,fn)=>{const u=URL.createObjectURL(blob);const el=document.createElement('a');el.href=u;el.download=fn;el.rel='noopener';document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)};
+ try{const {L,data}=await bakData();const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const fn='audit-sicherung-'+new Date().toISOString().slice(0,10)+'.json';const done=()=>{try{localStorage.setItem('aa_lastexp',Date.now())}catch(e){}R()};
+  /* Android-App: direkt in «Downloads» */
+  if(window.AndroidBridge&&AndroidBridge.save){await saveFile(fn,blob);done();return}
+  /* iPhone/iPad: Teilen-Menü (in «Dateien» oder iCloud sichern); wenn das scheitert, normaler Download */
+  if(/iPhone|iPad/i.test(navigator.userAgent)){try{const f=new File([blob],fn,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:fn});done();toast('Sicherungsdatei erstellt: '+L.length+(L.length===1?' Audit.':' Audits.'));return}}catch(e){if(e&&e.name==='AbortError'){toast('Abgebrochen. Es wurde keine Datei gespeichert.');return}}}
+  /* Android-Browser und Computer: normaler Download in den Download-Ordner */
+  dl(blob,fn);done();toast('Sicherungsdatei gespeichert (Download-Ordner): '+fn)}catch(e){toast('Sicherungsdatei konnte nicht erstellt werden: '+((e&&e.message)||'unbekannter Fehler'))}}
 async function bakImport(file){try{const d=JSON.parse(await file.text());if(!d||d.app!=='audit-kalkulationstool'||!Array.isArray(d.audits))throw 0;
  for(const a of d.audits){(a.obs||[]).forEach(o=>{if(typeof o.img==='string'&&o.img.indexOf('idb:')===0){const u=d.imgs&&d.imgs[o.img.slice(4)];if(u)o.img=u;else{delete o.img;o.imgLost=true}}});(a.obs||[]).forEach(clean);addCopy(a,' (eingelesen)')}
  persist();toast(d.audits.length+(d.audits.length===1?' Audit eingelesen.':' Audits eingelesen.')+' Bestehende Audits bleiben unverändert.');R()}catch(e){toast('Diese Datei ist keine Sicherung dieser App.')}}
