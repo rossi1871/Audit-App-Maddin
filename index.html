@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V99</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V100</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -84,6 +84,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .ht{font-size:26px;margin:4px 0 6px}
 .hst{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:10px}.hst li{display:flex;gap:12px;align-items:flex-start}.hst i{font-style:normal;flex:none;width:28px;height:28px;border-radius:50%;background:var(--acb);color:var(--ac);display:grid;place-items:center;font-weight:700;font-size:14px;border:1px solid var(--ac)}
 .tbi{flex:none;width:40px;height:40px;border-radius:12px;background:var(--sf2);border:1px solid var(--ln);display:grid;place-items:center;color:var(--ac)}.tbi svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fgs{margin-top:4px;border:1px solid var(--ln);border-radius:12px;background:var(--sf);overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35)}.fgs button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--ln);padding:11px 14px;color:var(--ink);font-size:15px;cursor:pointer}.fgs button:first-child{border-top:0}.fgs button:active{background:var(--acb)}
 .lnk{background:none;border:0;padding:4px 0;color:var(--ac);font-weight:600;font-size:15px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.feat>div{border:1px solid var(--ln);background:var(--sf2);border-radius:14px;padding:14px 4px;text-align:center;font-size:14px;font-weight:600;color:var(--ac)}
 .feat svg,.fl svg{width:28px;height:28px;display:block;margin:0 auto 6px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px var(--glow))}
@@ -94,7 +95,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=99;
+const VER=100;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:true,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -640,7 +641,7 @@ document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='hw'&&/Arrow/
 function lookCfg(){const lp=lastProf();return acc('color','Akzentfarbe','<span class="sw" style="background:var(--ac)"></span> Farbton '+HUE+'°',`<p class="sm" style="margin:0">Am Farbkreis entlang wischen. Die Farbe ändert sich sofort.</p>
  <div id="hw" class="hw" role="slider" tabindex="0" aria-label="Akzentfarbe" aria-valuemin="0" aria-valuemax="359" aria-valuenow="${HUE}"><div class="hwi"><span class="sm" style="display:block;text-align:center">Vorschau<br><span class="hwp" style="display:inline-block;margin-top:6px">Knopf</span></span></div><div id="hwk" class="hwk" style="transform:rotate(${HUE}deg)"><i></i></div></div>
  <div style="text-align:center"><button class="sec" data-a="hued">Standardfarbe</button></div>`,false)+acc('fg','Fachgebiet',lp&&lp.p!=='Allgemein'?'✓ '+esc(lp.p):'nicht angegeben (freiwillig)',`<p class="sm" style="margin:0 0 6px">Freiwillig. Hilft der KI am Anfang, danach lernt die App mit.</p>
- <input id="cfg_fg" class="fi" list="fgl2" autocomplete="off" value="${lp&&lp.p!=='Allgemein'?esc(lp.p):''}" placeholder="z. B. Elektro, Telekom, Maler">${fgList('fgl2')}
+ <input id="cfg_fg" class="fi" data-fg="1" autocomplete="off" enterkeyhint="done" value="${lp&&lp.p!=='Allgemein'?esc(lp.p):''}" placeholder="z. B. Elektro, Telekom, Maler">${fgList('fgl2')}
  <button class="pri" data-a="fgsave" style="width:100%;margin-top:8px">Fachgebiet speichern</button>`,false,!!(lp&&lp.p!=='Allgemein'))}
 /* Einstellungen: KI-Verbindung */
 function aiStat(k){
@@ -794,7 +795,7 @@ function start(){const lp=lastProf();
  <ol class="hst">${[['«Audit starten» antippen','Gib dem Objekt einen Namen, wenn du magst.'],['Vor Ort erfassen','Sprechen, fotografieren oder schreiben, in beliebiger Reihenfolge. Jede Erfassung wird ein nummerierter Schritt.'],['KI wertet aus, du erhältst den Bericht','Räume, Geräte und Mehraufwand werden erkannt. Bericht und Offerte für Excel und Word.']].map(([t,d],i)=>`<li><i>${i+1}</i><span><b>${t}</b><br><span class="sm">${d}</span></span></li>`).join('')}</ol>
  <button class="lnk" data-a="tour" style="margin:0 0 12px">▶ Kurzer Rundgang (1 Minute)</button>
  <button class="go" data-a="hnew"><b>Audit starten</b><span class="ga" aria-hidden="true">+</span></button>
- <label class="sm" for="fg" style="display:block;margin:16px 0 4px">Dein Fachgebiet (freiwillig, hilft der KI am Anfang)</label><input id="fg" class="fi" list="fgl" autocomplete="off" value="${lp&&lp.p!=='Allgemein'?esc(lp.p):''}" placeholder="z. B. Elektro, Telekom, Maler">${fgList('fgl')}
+ <label class="sm" for="fg" style="display:block;margin:16px 0 4px">Dein Fachgebiet (freiwillig, hilft der KI am Anfang)</label><input id="fg" class="fi" data-fg="1" autocomplete="off" enterkeyhint="done" value="${lp&&lp.p!=='Allgemein'?esc(lp.p):''}" placeholder="z. B. Elektro, Telekom, Maler">${fgList('fgl')}
  <p class="sm" style="text-align:center;margin-top:16px">Keine Registrierung nötig. Alle Daten bleiben zunächst auf deinem Gerät.</p></div>`;
  return`<div class="bd">${head}<button class="go" data-a="hnew"><b>Audit NEU</b><span class="ga" aria-hidden="true">+</span></button>
  <h2 style="font-size:18px;margin:20px 0 4px">Letzte Audits</h2>
@@ -813,7 +814,15 @@ function tourModal(){const n=S.tour;const st=[
  <div style="display:flex;justify-content:space-between">${n?`<button class="lnk" data-a="tourgo" data-v="${n-1}">‹ Zurück</button>`:'<span></span>'}${last?'':'<button class="lnk" data-a="tourx" style="color:var(--mu)">Überspringen</button>'}</div></div></div></div>`}
 function tourDone(){try{localStorage.setItem('aa_tour','1');localStorage.setItem('aa_wz','1')}catch(e){}}
 setTimeout(()=>{try{if(localStorage.getItem('aa_tour')||S.audits.length||S.wz||S.cfg)return}catch(e){return}S.tour=0;R()},700);
-function fgList(id){return`<datalist id="${id}">${FIELDS.map(f=>`<option value="${esc(f[0])}">`).join('')}</datalist>`}
+function fgList(id){return`<div class="fgs" id="${id}" hidden></div>`}
+/* V100: eigene Vorschlagsliste fürs Fachgebiet (die eingebaute Browser-Liste fehlt in manchen Browsern und in der Android-App) */
+function fgFind(q){q=(q||'').trim().toLowerCase();if(!q)return[];const R=[];FIELDS.forEach(([l,sy])=>{const n=l.toLowerCase(),al=String(sy||'').split('|');let sc=n.startsWith(q)?0:n.split(/[ \/-]+/).some(w=>w.startsWith(q))?1:al.some(a=>a.startsWith(q))?2:(n.includes(q)||al.some(a=>a.includes(q)))?3:9;if(sc<9)R.push([sc,l])});return R.sort((a,b)=>a[0]-b[0]||a[1].localeCompare(b[1])).slice(0,6).map(x=>x[1])}
+function fgShow(inp){const box=inp&&inp.parentNode&&inp.parentNode.querySelector('.fgs');if(!box)return;const L=fgFind(inp.value);if(!L.length||L.length===1&&L[0].toLowerCase()===inp.value.trim().toLowerCase()){box.hidden=true;box.innerHTML='';return}
+ box.innerHTML=L.map(l=>`<button type="button" data-fgv="${esc(l)}">${esc(l)}</button>`).join('');box.hidden=false}
+addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.fg)fgShow(e.target)});
+addEventListener('focusin',e=>{if(e.target&&e.target.dataset&&e.target.dataset.fg&&e.target.value)fgShow(e.target)});
+addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-fgv]');if(b){e.preventDefault();const box=b.parentNode,inp=box.parentNode.querySelector('[data-fg]');if(inp){inp.value=b.dataset.fgv;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))}box.hidden=true;box.innerHTML='';return}
+ if(!(e.target&&e.target.closest&&e.target.closest('[data-fg]')))document.querySelectorAll('.fgs').forEach(x=>{x.hidden=true})},true);
 function res(q0){const t=q0.trim();const q=norm(t);if(!q)return'';
  const hit=x=>{const n=norm(x);return n.startsWith(q)||n.split(/[\s\/\-]+/).some(w=>w.startsWith(q))||(q.length>=4&&n.includes(q))};
  const m=FIELDS.map(([l,sy])=>{const lm=hit(l);const via=lm?null:sy.split('|').find(hit);return(lm||via)?[l,via]:null}).filter(Boolean);
