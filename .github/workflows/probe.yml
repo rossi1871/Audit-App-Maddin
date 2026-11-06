@@ -1,0 +1,7 @@
+name: Umzug prüfen
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -sS -m 30 "https://go-range.de/audit/api/move.php?a=logview" | cut -c1-260
