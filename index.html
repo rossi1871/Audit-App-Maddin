@@ -136,9 +136,28 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwi{position:absolute;inset:36px;border-radius:50%;background:var(--sf);display:grid;place-items:center;box-shadow:inset 0 0 0 5px var(--ac),0 0 34px var(--glow)}
 .hwp{color:#fff;font-weight:700;font-size:14px;padding:8px 14px;border-radius:12px;background:linear-gradient(135deg,hsl(var(--hue) 85% 50%),hsl(calc(var(--hue) + 25) 85% 40%));box-shadow:0 4px 18px var(--glow)}
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
+
+/* V141: Handy-Bedienung – grössere Tippflächen, kein Zoom beim Tippen, kein Doppeltipp-Zoom, Platz über dem Home-Balken */
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+button,.chip,.lnk,.lg,.li,.cb,.cbw{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.modal>div,.sh{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.cnt{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.sh{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.modal>div{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+@media (pointer:coarse){
+ input,textarea,select{font-size:16px!important}
+ .chip{min-height:40px;padding:8px 14px;font-size:14px}
+ .ib{min-height:40px;min-width:40px}
+ .act>button,.act>a,button.pri,button.sec,a.pri,a.sec,.n{min-height:44px}
+ .lnk{padding:12px 6px;margin:-12px -6px}
+ input[type=checkbox]{width:24px!important;height:24px!important;flex:none}
+ [data-a=cdel]{min-width:40px;min-height:40px}
+ [data-a=cedit]{padding:8px 0;display:inline-block}
+ [data-a=adr]{padding:10px 0;margin:-10px 0}
+}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=140;
+const VER=141;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -436,6 +455,10 @@ function dirtyUI(){
  if(S.rm&&S.rmSnap!==undefined){S.rmDirty=rmCur()!==S.rmSnap;const b=document.getElementById('rmsaveb');if(b)b.className=S.rmDirty?'pri':'sec'}
  if(S.oe!=null&&S.oeSnap!==undefined){S.oeDirty=oeCur()!==S.oeSnap;const b=document.getElementById('oesaveb');if(b)b.className=S.oeDirty?'pri':'sec'}
  if(S.adrForm&&S.adrSnap!==undefined){S.adrDirty=adrCur()!==S.adrSnap;const b=document.getElementById('adrsaveb');if(b)b.className=S.adrDirty?'pri':'sec'}}
+/* V141: Enter springt zum nächsten Feld, im letzten Feld schliesst sich die Tastatur */
+const fldNext=t=>{const c=t.closest('.modal>div,.sh,.bd');if(!c)return null;const L=[...c.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([hidden]),textarea,select')].filter(e=>e.offsetParent&&!e.disabled&&!e.readOnly);const i=L.indexOf(t);return i>=0?L[i+1]||null:null};
+addEventListener('focusin',e=>{const t=e.target;if(t&&t.tagName==='INPUT'&&!/checkbox|radio|file/.test(t.type)&&!t.dataset.fg)t.setAttribute('enterkeyhint',fldNext(t)?'next':'done')});
+addEventListener('keydown',e=>{const t=e.target;if(e.key!=='Enter'||e.isComposing||!t||t.tagName!=='INPUT'||/checkbox|radio|file/.test(t.type))return;const n=fldNext(t);e.preventDefault();if(n)n.focus();else t.blur()});
 /* V140: Fokussiertes Feld in Fenstern (Bearbeiten, Einstellungen) über der Tastatur halten */
 function kbFit(){const a=document.activeElement;if(!a||!/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;const c=a.closest('.modal>div,.sh');if(!c)return;const vv=window.visualViewport,vh=vv?vv.height:innerHeight,top=vv?vv.offsetTop:0;const r=a.getBoundingClientRect();if(r.bottom>top+vh-16||r.top<top+8){c.scrollTop+=r.top-(top+vh*0.35)}}
 addEventListener('focusin',e=>{if(e.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.closest('.modal>div,.sh')){setTimeout(kbFit,350);setTimeout(kbFit,700)}});
