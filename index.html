@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V124</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V125</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--fx:0;--lg:hsl(var(--hue) 60% 36%);--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -135,7 +135,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=124;
+const VER=125;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -1211,10 +1211,16 @@ function geoDist(a,b){const R=6371000,r=x=>x*Math.PI/180,dl=r(b.la-a.la),dn=r(b.
 function trkStats(T){T=T||[];let L=0;for(let i=1;i<T.length;i++)L+=geoDist(T[i-1],T[i]);let A=0;if(T.length>=4&&geoDist(T[0],T[T.length-1])<=30){const la0=T[0].la*Math.PI/180,mx=111320*Math.cos(la0),my=110540;const P=T.map(q=>[(q.lo-T[0].lo)*mx,(q.la-T[0].la)*my]);for(let i=0;i<P.length;i++){const[a,b]=P[i],[c,d]=P[(i+1)%P.length];A+=a*d-b*c}A=Math.abs(A)/2}return{len:L,area:A,n:T.length}}
 async function trkStart(){if(!navigator.geolocation){toast('Dieses Gerät liefert keinen Standort.');return}
  S.cur.trk=S.cur.trk||[];S.trkOn=true;R();
- GEO.wid=navigator.geolocation.watchPosition(p=>{const q={la:+p.coords.latitude.toFixed(6),lo:+p.coords.longitude.toFixed(6),ac:Math.round(p.coords.accuracy),t:Date.now()};GEO.last=q;if(q.ac>40)return;const T=S.cur.trk,l=T[T.length-1];if(!l||geoDist(l,q)>=4||q.t-l.t>60000){T.push(q);if(T.length%5===0)persist();const el=document.getElementById('trkst');if(el)el.textContent=trkTxt()}},
+ GEO.fix=0;GEO.t0=Date.now();clearInterval(GEO.diag);GEO.diag=setInterval(trkDiag,5000);
+ GEO.wid=navigator.geolocation.watchPosition(p=>{const q={la:+p.coords.latitude.toFixed(6),lo:+p.coords.longitude.toFixed(6),ac:Math.round(p.coords.accuracy),t:Date.now()};GEO.last=q;GEO.fix++;GEO.lastAc=q.ac;if(q.ac>40){trkDiag();return}const T=S.cur.trk,l=T[T.length-1];if(!l||geoDist(l,q)>=4||q.t-l.t>60000){T.push(q);if(T.length%5===0)persist();const el=document.getElementById('trkst');if(el){el.textContent=trkTxt();el.style.color=''}}},
   e=>{if(e&&e.code!==1){const el=document.getElementById('trkst');if(el&&!(S.cur.trk||[]).length)el.textContent='Warte auf GPS-Signal … (drinnen ans Fenster oder nach draussen)';return}S.trkOn=false;if(GEO.wid!=null)navigator.geolocation.clearWatch(GEO.wid);GEO.wid=null;S.geoErr=geoMsg(e);R()},{enableHighAccuracy:true,maximumAge:5000,timeout:60000});
  try{if(window.AndroidBridge&&AndroidBridge.keepScreenOn)AndroidBridge.keepScreenOn(true);else if(navigator.wakeLock)GEO.wake=await navigator.wakeLock.request('screen')}catch(e){}}
-function trkStop(){if(GEO.wid!=null)navigator.geolocation.clearWatch(GEO.wid);GEO.wid=null;S.trkOn=false;try{window.AndroidBridge&&AndroidBridge.keepScreenOn&&AndroidBridge.keepScreenOn(false)}catch(e){}try{GEO.wake&&GEO.wake.release()}catch(e){}GEO.wake=null;persist();R()}
+/* V125: verständliche Rückmeldung, warum (noch) keine Punkte aufgezeichnet werden */
+function trkDiag(){if(!S.trkOn){clearInterval(GEO.diag);return}const el=document.getElementById('trkst');if(!el)return;const T=S.cur.trk||[];const ac=GEO.lastAc,age=(Date.now()-(GEO.t0||Date.now()))/1000;
+ let m='';if(GEO.fix&&ac>40)m=ac>=800?`Nur ungefährer Standort (± ${ac>=1000?(ac/1000).toFixed(1)+' km':ac+' m'}). Bitte «Genauer Standort» erlauben.`:`Signal noch zu ungenau (± ${ac} m, nötig ± 40 m). Draussen mit freiem Himmel wird es genauer.`;
+ else if(!GEO.fix&&age>40)m='Noch kein Signal. Ist der Standort am Handy eingeschaltet? Drinnen findet GPS oft keines.';
+ if(!m){if(T.length)el.textContent=trkTxt();else el.textContent='Suche GPS-Signal …';return}el.textContent=T.length?trkTxt()+' · '+m:m;el.style.color='var(--y)'}
+function trkStop(){clearInterval(GEO.diag);if(GEO.wid!=null)navigator.geolocation.clearWatch(GEO.wid);GEO.wid=null;S.trkOn=false;try{window.AndroidBridge&&AndroidBridge.keepScreenOn&&AndroidBridge.keepScreenOn(false)}catch(e){}try{GEO.wake&&GEO.wake.release()}catch(e){}GEO.wake=null;persist();R()}
 document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&S.trkOn&&navigator.wakeLock){try{GEO.wake=await navigator.wakeLock.request('screen')}catch(e){}}});
 function fmtM(m){return m>=1000?(m/1000).toFixed(2).replace('.',',')+' km':Math.round(m)+' m'}
 function trkTxt(){const st=trkStats(S.cur.trk);return`${st.n} Punkte · Weg ${fmtM(st.len)}${st.area?' · Fläche ca. '+Math.round(st.area).toLocaleString('de-CH')+' m²':''}`}
@@ -1247,7 +1253,7 @@ function geoSugBox(){if(!navigator.geolocation)return'';const g=S.geoSug;
  if(!g)return`<button class="chip" data-a="geoaddr" style="margin:2px 0 10px">📍 Adresse vom aktuellen Standort vorschlagen</button>`;
  if(g.busy)return`<p class="sm" style="margin:2px 0 10px">📍 Standort wird ermittelt …</p>`;
  if(g.err)return`<p class="sm" style="margin:2px 0 10px">📍 ${esc(g.err)} <button class="lnk" data-a="geoaddr" style="font-size:13px">Nochmals</button></p>`;
- return`<div class="ob" style="margin:2px 0 10px;padding:10px 12px;background:var(--acb);border-color:var(--ac)"><div class="sm">📍 Vorschlag vom Standort (± ${g.ac} m)</div><b data-nt>${esc([g.str,[g.plz,g.ort].filter(Boolean).join(' ')].filter(Boolean).join(', '))}</b><div style="margin-top:6px"><button class="pri" data-a="geouse" style="padding:6px 14px">Übernehmen</button></div></div>`}
+ return`<div class="ob" style="margin:2px 0 10px;padding:10px 12px;background:var(--acb);border-color:var(--ac)"><div class="sm">📍 Vorschlag vom Standort (± ${g.ac>=1000?(g.ac/1000).toFixed(1)+' km':g.ac+' m'})${g.ac>=800?' – ungenau, bitte prüfen. Für genaue Adressen «Genauer Standort» erlauben.':''}</div><b data-nt>${esc([g.str,[g.plz,g.ort].filter(Boolean).join(' ')].filter(Boolean).join(', '))}</b><div style="margin-top:6px"><button class="pri" data-a="geouse" style="padding:6px 14px">Übernehmen</button></div></div>`}
 function add(o){if(!o.uid)o.uid=Date.now().toString(36)+Math.random().toString(36).slice(2,6);S.obs.unshift(o);geoTag(o);if(o.room)S.room=o.room;}
 
 /* ===== Sprachen: de ist Quelle. en/fr sind eingebaut, weitere Pakete würden bei Bedarf geladen und lokal gespeichert. ===== */
