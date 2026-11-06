@@ -1,0 +1,17 @@
+# Audit & Kalkulationstool – Server-Einstellungen für Strato (Apache)
+
+# Richtiger Typ für das App-Manifest
+AddType application/manifest+json .webmanifest
+
+# Updates sofort ausliefern: App, Service-Worker und Manifest nie aus dem Cache
+<IfModule mod_headers.c>
+  <FilesMatch "^(index\.html|sw\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+  <FilesMatch "\.png$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+DirectoryIndex index.html

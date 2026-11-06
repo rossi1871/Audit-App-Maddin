@@ -1,0 +1,44 @@
+name: Auf Strato veröffentlichen
+
+# Lädt die Web-App bei jeder Änderung per SFTP in den Ordner /audit auf dem Strato-Webspace
+# (Subdomain audit.go-range.de). Zugangsdaten kommen aus den GitHub-Secrets
+# STRATO_HOST, STRATO_USER, STRATO_PASS. Ohne Secrets wird der Upload übersprungen.
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'sw.js', 'manifest.webmanifest', '*.png', 'web/**', '.github/workflows/strato.yml']
+  workflow_dispatch:
+
+concurrency: strato
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      STRATO_HOST: ${{ secrets.STRATO_HOST }}
+      STRATO_USER: ${{ secrets.STRATO_USER }}
+      STRATO_PASS: ${{ secrets.STRATO_PASS }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secrets vorhanden?
+        id: chk
+        run: |
+          if [ -z "$STRATO_HOST" ] || [ -z "$STRATO_USER" ] || [ -z "$STRATO_PASS" ]; then
+            echo "Strato-Secrets fehlen, Upload wird übersprungen."; echo "ok=0" >> "$GITHUB_OUTPUT"
+          else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
+      - name: Dateien zusammenstellen
+        if: steps.chk.outputs.ok == '1'
+        run: |
+          mkdir site
+          cp index.html sw.js manifest.webmanifest *.png site/
+          cp web/.htaccess site/.htaccess
+          ls -la site
+      - name: lftp installieren
+        if: steps.chk.outputs.ok == '1'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - name: Hochladen nach /audit
+        if: steps.chk.outputs.ok == '1'
+        run: |
+          lftp -e "set sftp:auto-confirm yes; set net:max-retries 3; set net:timeout 30; \
+            mkdir -p -f audit; mirror -R --verbose --no-perms site/ audit/; cls -l audit/; bye" \
+            -u "$STRATO_USER","$STRATO_PASS" "sftp://$STRATO_HOST"
