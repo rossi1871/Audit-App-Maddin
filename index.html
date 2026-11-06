@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V126</title>
+<html lang="de"><head><meta charset="utf-8"><title>Audit & Kalkulationstool · Prototyp V127</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0f5c6e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--fx:0;--lg:hsl(var(--hue) 60% 36%);--hue:215;--bg:hsl(var(--hue) 40% 92%);--sf:#fff;--sf2:hsl(var(--hue) 45% 97%);--ink:#13202b;--mu:#586674;--ln:hsl(var(--hue) 30% 85%);--ac:hsl(var(--hue) 80% 34%);--acb:hsl(var(--hue) 70% 93%);--onac:#fff;--glow:hsl(var(--hue) 95% 50% / .22);--r:#b3261e;--rb:#fbe4e1;--y:#8a5a00;--yb:#fdf0c9;--b:#27589a;--bb:#e1ecf8;--ok:#1d6b3a;--okb:#e2f3e7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -63,7 +63,9 @@ h2{font-size:24px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
 .act{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .act button{border:1px solid var(--ln);background:var(--sf2);border-radius:9px;padding:6px 10px;font-size:14px;color:var(--ink)}
 .nt{font-size:13px;color:var(--ok);margin-top:6px}
-.toast{position:absolute;left:12px;right:12px;bottom:84px;background:var(--ink);color:var(--sf);border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;z-index:9;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 8px);width:max-content;max-width:calc(100% - 24px);background:var(--ink);color:var(--sf);border-radius:999px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:60;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.35);pointer-events:none;animation:tin .2s ease-out}
+.toast button{pointer-events:auto}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 .toast button{background:none;border:0;color:inherit;font-weight:700;text-decoration:underline}
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:6;display:flex;align-items:flex-end}
 .modal>div{background:var(--sf);width:100%;padding:16px;border-radius:20px 20px 0 0}
@@ -136,7 +138,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=126;
+const VER=127;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -511,7 +513,7 @@ const XS={"Architektur / Planung": "architect|architecte|planning|planification"
 const att=t=>String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const norm=s=>s.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss');
 function addPt(a){const[cls,title,where,text,acts]=a;S.pts.push({id:++nid,cls,title,where,text,acts,st:'open',note:''});}
-function toast(m,undo){S.toast={m,undo};clearTimeout(tt);tt=setTimeout(()=>{S.toast=null;const el=document.querySelector('.toast');if(el)el.remove()},5000);}
+function toast(m,undo){S.toast={m,undo};clearTimeout(tt);tt=setTimeout(()=>{S.toast=null;const el=document.querySelector('.toast');if(el)el.remove()},undo?6000:Math.min(6000,2500+String(m||'').length*30));}
 /* ===== V63: echte KI-Auswertung je Schritt, Strukturierung, Export ===== */
 const str=(v,m)=>typeof v==='string'?v.trim().slice(0,m||200):'';
 const aiLang=()=>({de:'Deutsch',en:'Englisch',fr:'Französisch'})[S.lang]||'Deutsch';
