@@ -1,9 +1,0 @@
-name: Adresse prüfen
-on: workflow_dispatch
-jobs:
-  probe:
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          for u in https://go-range.de/ https://go-range.de/audit/ https://go-range.de/audit/sw.js https://www.go-range.de/audit/ https://go-range.de/martin/; do
-            echo "== $u"; curl -sS -m 20 -L -o body -w "code=%{http_code} final=%{url_effective}\n" "$u"; head -c 300 body; echo; done
