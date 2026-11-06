@@ -138,7 +138,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=137;
+const VER=138;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -1042,10 +1042,13 @@ function R(){
  /* V73: Eingaben, die noch nicht gespeichert sind, bleiben beim Neuzeichnen erhalten */
  const cap={};p.querySelectorAll('input[id],textarea[id],select[id]').forEach(e=>{if(e.type==='file'||KEEPX.has(e.id))return;cap[e.id]=e.type==='checkbox'||e.type==='radio'?e.checked:e.value});
  const fa=document.activeElement,fid=fa&&fa.id&&p.contains(fa)?fa.id:null,fs=fid&&fa.selectionStart!=null?[fa.selectionStart,fa.selectionEnd]:null;
+ /* V138: Bildlaufposition offener Fenster (Einstellungen, Bearbeiten) beim Neuzeichnen behalten */
+ const scs=[...p.querySelectorAll('.sh,.modal>div')].map(e=>[(e.querySelector('h2')||{}).textContent+'|'+(S.cfgTab||''),e.scrollTop]);
  const vh=({start,search,sub,walk,fin,done,pause,obj,objnew,profsug,calc}[S.sc])();
  p.innerHTML=vh+(S.toast&&vh.indexOf('class="toast"')<0?`<div class="toast"><span>${esc(S.toast.m)}</span>${S.toast.undo?'<button data-a="undo">Rückgängig</button>':''}</div>`:'')+gearHtml()+cfgSheet()+dlModal()+cfModal()+wzModal()+(S.costInfo?costModal():'')+(S.tour!=null?tourModal():'')+geoMap()+(S.netInfo?netInfo():'')+(S.delAsk!=null?delSheet():'');
  p.querySelectorAll('input[id],textarea[id],select[id]').forEach(e=>{const ck=e.type==='checkbox'||e.type==='radio';const def=ck?e.checked:e.value;
   if(e.id in cap&&RV[e.id]===def&&cap[e.id]!==def){if(ck)e.checked=cap[e.id];else e.value=cap[e.id]}RV[e.id]=def});
+ if(scs.length){const now=[...p.querySelectorAll('.sh,.modal>div')];now.forEach(e=>{const k=(e.querySelector('h2')||{}).textContent+'|'+(S.cfgTab||'');const m=scs.find(x=>x[0]===k);if(m&&m[1])e.scrollTop=m[1]})}
  if(fid){const e=document.getElementById(fid);if(e&&e!==document.activeElement){try{e.focus({preventScroll:true});if(fs&&e.setSelectionRange)e.setSelectionRange(fs[0],fs[1])}catch(x){}}}
  snapLazy();
  const sd=document.getElementById('side');
