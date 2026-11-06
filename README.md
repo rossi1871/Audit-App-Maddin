@@ -1,3 +1,4 @@
 # Audit & Kalkulationstool
 
-Installierbare Web-App. Netlify veröffentlicht jede Änderung in diesem Archiv automatisch.
+Installierbare Web-App, veröffentlicht jede Änderung in diesem Archiv automatisch.
+
