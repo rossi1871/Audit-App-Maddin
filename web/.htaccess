@@ -9,7 +9,7 @@ AddType application/manifest+json .webmanifest
     Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
   <FilesMatch "\.png$">
-    Header set Cache-Control "public, max-age=604800"
+    Header set Cache-Control "no-cache"
   </FilesMatch>
   Header set X-Content-Type-Options "nosniff"
 </IfModule>

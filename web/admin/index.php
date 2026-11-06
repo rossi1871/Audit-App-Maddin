@@ -107,7 +107,7 @@ $LANGN = ['de' => 'Deutsch', 'en' => 'Englisch', 'fr' => 'Französisch', 'it' =>
 $MODEN = ['app' => 'Android-App', 'pwa' => 'Home-Bildschirm', 'web' => 'Browser'];
 ?><!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Audit · Dashboard</title><link rel="icon" href="../icon-192.png">
+<title>Audit · Dashboard</title><link rel="icon" href="../icon-192.png?v=2">
 <style>
 :root{--bg:#0b1426;--card:#121f38;--line:#22324f;--tx:#e8eefb;--mu:#93a3c3;--ac:#5898f4;--ok:#3ecf8e;--bad:#ff6b6b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -131,7 +131,7 @@ table{width:100%;border-collapse:collapse}td,th{padding:9px 6px;border-bottom:1p
 .mu{color:var(--mu);font-size:13px}input[type=password]{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0f1a30;color:var(--tx);font-size:16px;margin:8px 0 12px}
 @media (max-width:640px){.hide-s{display:none}td,th{padding:8px 4px}}
 </style></head><body><div class="wrap">
-<header><img src="../icon-192.png" alt=""><h1>Audit · Dashboard</h1><?php if (!empty($_SESSION['ok'])): ?><a class="btn" href="?logout=1">Abmelden</a><?php endif; ?></header>
+<header><img src="../icon-192.png?v=2" alt=""><h1>Audit · Dashboard</h1><?php if (!empty($_SESSION['ok'])): ?><a class="btn" href="?logout=1">Abmelden</a><?php endif; ?></header>
 <?php if ($hash === ''): ?>
   <div class="card"><h2>Noch nicht eingerichtet</h2>
   <p>Lege in GitHub im Repository unter <b>Settings › Secrets and variables › Actions</b> ein Secret <b>ADMIN_PASS</b> mit deinem Wunsch-Passwort an.
