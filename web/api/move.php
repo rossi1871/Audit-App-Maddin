@@ -16,6 +16,17 @@ foreach (glob($dir . '/*', GLOB_ONLYDIR) ?: [] as $d) {
 }
 
 $a = $_GET['a'] ?? '';
+/* Kurzes Protokoll zur Fehlersuche beim Umzug (ohne IP, ohne Inhalte) */
+if ($a === 'log') {
+    $in = json_decode((string)file_get_contents('php://input', false, null, 0, 1000), true) ?: [];
+    $row = ['t' => date('Y-m-d H:i:s'), 'st' => substr((string)($in['st'] ?? ''), 0, 20), 'x' => substr((string)($in['x'] ?? ''), 0, 200), 'h' => substr((string)($in['h'] ?? ''), 0, 40), 'app' => (int)($in['app'] ?? 0), 'dev' => deviceOf((string)($_SERVER['HTTP_USER_AGENT'] ?? '')), 'ua' => substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 160)];
+    $lf = dataDir() . '/move_log.jsonl';
+    $L = is_file($lf) ? array_slice(file($lf) ?: [], -49) : [];
+    $L[] = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+    @file_put_contents($lf, implode('', $L), LOCK_EX);
+    jsonOut(['ok' => true]);
+}
+if ($a === 'logview') { $lf = dataDir() . '/move_log.jsonl'; header('Content-Type: text/plain; charset=utf-8'); echo is_file($lf) ? file_get_contents($lf) : ''; exit; }
 if ($a === 'ping') jsonOut(['ok' => true, 'php' => PHP_VERSION, 'post_max' => ini_get('post_max_size')]);
 
 $id = $_GET['id'] ?? '';

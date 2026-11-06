@@ -171,10 +171,13 @@ function box(html){let o=document.getElementById('mvbox');if(!o){o=document.crea
  o.innerHTML='<div style="max-width:420px;width:100%;text-align:center"><img src="icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:14px">'+html+'</div>';return o}
 const btn=(id,t,pri)=>'<button id="'+id+'" style="display:block;width:100%;margin:10px 0 0;padding:14px;border-radius:12px;font-size:16px;border:1px solid #5898f4;'+(pri?'background:#5898f4;color:#fff':'background:transparent;color:#5898f4')+'">'+t+'</button>';
 const on=(id,f)=>{const e=document.getElementById(id);if(e)e.onclick=f};
+function tfetch(u,o,ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms||45000);return fetch(u,Object.assign({},o||{},{signal:c.signal})).catch(e=>{throw new Error(e&&e.name==='AbortError'?'Zeitüberschreitung (Server antwortet nicht)':'Netzwerk: '+((e&&e.message)||e))}).finally(()=>clearTimeout(t))}
+function mlog(st,x){try{fetch(MV.api+'move.php?a=log',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({st,x:String(x||'').slice(0,200),h:location.host,app:window.AndroidBridge?1:0}),keepalive:true}).catch(()=>{})}catch(e){}}
 async function retry(f,n=3){let e;for(let i=0;i<n;i++){try{return await f()}catch(x){e=x;await new Promise(r=>setTimeout(r,800*(i+1)))}}throw e}
 function idbAll(){return new Promise(ok=>{try{const q=indexedDB.open('aa_img',1);q.onupgradeneeded=()=>q.result.createObjectStore('i');q.onerror=()=>ok({});q.onsuccess=()=>{const db=q.result,o={};try{const c=db.transaction('i').objectStore('i').openCursor();c.onsuccess=()=>{const r=c.result;if(r){o[r.key]=r.value;r.continue()}else ok(o)};c.onerror=()=>ok(o)}catch(e){ok(o)}}}catch(e){ok({})}})}
 function idbPut(o){return new Promise(ok=>{try{const q=indexedDB.open('aa_img',1);q.onupgradeneeded=()=>q.result.createObjectStore('i');q.onerror=()=>ok(false);q.onsuccess=()=>{const t=q.result.transaction('i','readwrite');const s=t.objectStore('i');for(const k in o)s.put(o[k],k);t.oncomplete=()=>ok(true);t.onerror=t.onabort=()=>ok(false)}}catch(e){ok(false)}})}
 function lsAll(){const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k!=='aa_moved')o[k]=localStorage.getItem(k)}}catch(e){}return o}
+const n_audits=d=>{try{return(JSON.parse(d.ls.aa_audits||'{}').audits||[]).length+' audits'}catch(e){return'?'}};
 const hasData=()=>{try{return!!localStorage.getItem('aa_audits')||!!localStorage.getItem('aa_lang')||!!localStorage.getItem('aa_prof')}catch(e){return false}};
 
 /* ---------- alte Adresse: Daten verschlüsselt mitnehmen ---------- */
@@ -188,12 +191,13 @@ async function send(){
   const enc=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,plain));
   const all=new Uint8Array(12+enc.length);all.set(iv,0);all.set(enc,12);
   const id=[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');
-  const of=Math.max(1,Math.ceil(all.length/CH));
-  for(let n=0;n<of;n++){st(T('Übertragen: ','Uploaded: ')+Math.round(n/of*100)+' % ('+(all.length/1048576).toFixed(1)+' MB)');
-   await retry(async()=>{const r=await fetch(MV.api+'move.php?a=put&id='+id+'&n='+n+'&of='+of,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:all.subarray(n*CH,(n+1)*CH)});if(!r.ok)throw new Error('HTTP '+r.status)})}
+  const of=Math.max(1,Math.ceil(all.length/CH));mlog('start',all.length+' B');
+  for(let n=0;n<of;n++){st(T('Übertragen: ','Uploaded: ')+Math.round(n/of*100)+' % ('+(all.length/1048576).toFixed(1)+' MB) · '+T('Teil ','part ')+(n+1)+'/'+of);
+   await retry(async()=>{const r=await tfetch(MV.api+'move.php?a=put&id='+id+'&n='+n+'&of='+of,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:all.slice(n*CH,(n+1)*CH).buffer});if(!r.ok)throw new Error('HTTP '+r.status)})}
+  mlog('sent',of+' parts, '+all.length+' B');
   try{localStorage.setItem('aa_moved',String(Date.now()))}catch(e){}
   location.href=MV.nu+'#move='+id+'.'+b64u(key);
- }catch(e){box('<h2 style="margin:0 0 8px">'+T('Übertragung fehlgeschlagen','Transfer failed')+'</h2><p style="color:#93a3c3">'+T('Bitte Internetverbindung prüfen und erneut versuchen. Deine Daten hier bleiben unverändert.','Please check the connection and try again. Your data here is unchanged.')+'<br><small>'+String(e&&e.message||e)+'</small></p>'+btn('mvr',T('Erneut versuchen','Try again'),1)+btn('mvl',T('Später','Later')));
+ }catch(e){mlog('send-fail',e&&e.message||e);box('<h2 style="margin:0 0 8px">'+T('Übertragung fehlgeschlagen','Transfer failed')+'</h2><p style="color:#93a3c3">'+T('Bitte Internetverbindung prüfen und erneut versuchen. Deine Daten hier bleiben unverändert.','Please check the connection and try again. Your data here is unchanged.')+'<br><small>'+String(e&&e.message||e)+'</small></p>'+btn('mvr',T('Erneut versuchen','Try again'),1)+btn('mvl',T('Später','Later')));
   on('mvr',send);on('mvl',()=>document.getElementById('mvbox').remove())}
 }
 function oldScreen(){
@@ -214,10 +218,10 @@ async function receive(id,kb){
  window.MOVE_LOCK=true;
  const st=m=>box('<h2 style="margin:0 0 8px">'+T('Daten werden übernommen …','Importing data …')+'</h2><p style="color:#93a3c3">'+m+'</p>');
  try{st(T('Verbindung wird aufgebaut.','Connecting.'));
-  const inf=await retry(async()=>{const r=await fetch(MV.api+'move.php?a=info&id='+id,{cache:'no-store'});if(r.status===404)throw Object.assign(new Error(T('Die Übertragung wurde nicht gefunden oder ist abgelaufen.','Transfer not found or expired.')),{fatal:1});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},2);
+  const inf=await retry(async()=>{const r=await tfetch(MV.api+'move.php?a=info&id='+id,{cache:'no-store'});if(r.status===404)throw Object.assign(new Error(T('Die Übertragung wurde nicht gefunden oder ist abgelaufen.','Transfer not found or expired.')),{fatal:1});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},2);
   if(inf.have<inf.of)throw new Error(T('Die Übertragung ist unvollständig.','The transfer is incomplete.'));
   const parts=[];let tot=0;
-  for(let n=0;n<inf.of;n++){st(T('Geladen: ','Loaded: ')+Math.round(n/inf.of*100)+' %');const b=await retry(async()=>{const r=await fetch(MV.api+'move.php?a=get&id='+id+'&n='+n,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return new Uint8Array(await r.arrayBuffer())});parts.push(b);tot+=b.length}
+  for(let n=0;n<inf.of;n++){st(T('Geladen: ','Loaded: ')+Math.round(n/inf.of*100)+' %');const b=await retry(async()=>{const r=await tfetch(MV.api+'move.php?a=get&id='+id+'&n='+n,{cache:'no-store'},90000);if(!r.ok)throw new Error('HTTP '+r.status);return new Uint8Array(await r.arrayBuffer())});parts.push(b);tot+=b.length}
   const all=new Uint8Array(tot);let o=0;for(const p of parts){all.set(p,o);o+=p.length}
   const k=await crypto.subtle.importKey('raw',ub64(kb),'AES-GCM',false,['decrypt']);
   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:all.subarray(0,12)},k,all.subarray(12));
@@ -228,11 +232,11 @@ async function receive(id,kb){
   try{const prev=localStorage.getItem('aa_audits');if(prev)localStorage.setItem('aa_audits_prev',prev)}catch(e){}
   for(const key in d.ls){try{localStorage.setItem(key,d.ls[key])}catch(e){}}
   try{localStorage.setItem('aa_movedin',String(Date.now()))}catch(e){}
-  fetch(MV.api+'move.php?a=del&id='+id,{method:'POST'}).catch(()=>{});
+  fetch(MV.api+'move.php?a=del&id='+id,{method:'POST'}).catch(()=>{});mlog('received',n_audits(d));
   let n=0;try{n=(JSON.parse(d.ls.aa_audits||'{}').audits||[]).length}catch(e){}
   box('<h2 style="margin:0 0 8px">'+T('Umzug abgeschlossen','Move complete')+'</h2><p style="color:#93a3c3">'+n+T(n===1?' Audit übernommen.':' Audits übernommen.',n===1?' audit imported.':' audits imported.')+'</p>'+btn('mvok',T('App öffnen','Open app'),1));
   on('mvok',()=>location.replace(location.pathname));
- }catch(e){window.MOVE_LOCK=false;
+ }catch(e){window.MOVE_LOCK=false;mlog('recv-fail',e&&e.message||e);
   box('<h2 style="margin:0 0 8px">'+T('Übernahme fehlgeschlagen','Import failed')+'</h2><p style="color:#93a3c3">'+String(e&&e.message||e)+'</p>'+(e&&e.fatal?'':btn('mvr',T('Erneut versuchen','Try again'),1))+btn('mvx',T('Ohne Daten fortfahren','Continue without data')));
   on('mvr',()=>receive(id,kb));on('mvx',()=>location.replace(location.pathname))}
 }
@@ -275,7 +279,7 @@ addEventListener('load',()=>{if(!mh&&!isOld)setTimeout(hit,1500)});
 })();
 </script>
 <script>
-const VER=146;
+const VER=147;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
