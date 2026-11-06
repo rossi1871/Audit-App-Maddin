@@ -35,6 +35,6 @@ jobs:
           name: Android-App ${{ github.run_number }}
           make_latest: true
           body: |
-            Android-App (Hülle) für das Audit & Kalkulationstool. Lädt immer die aktuelle Version von audit-maddin.netlify.app.
+            Android-App (Hülle) für das Audit & Kalkulationstool. Lädt immer die aktuelle Version von go-range.de/audit.
             Installation: audit-app.apk auf dem Handy öffnen und "Installieren" wählen.
           files: audit-app.apk

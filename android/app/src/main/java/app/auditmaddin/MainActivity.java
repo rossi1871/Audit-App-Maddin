@@ -27,13 +27,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Schlanke Android-Hülle um die Web-App (audit-maddin.netlify.app).
- * Lädt immer die aktuelle Version von Netlify. Fragt Standort, Mikrofon und Kamera
+ * Schlanke Android-Hülle um die Web-App (go-range.de/audit).
+ * Lädt immer die aktuelle Version vom eigenen Server. Beim ersten Start nach dem Umzug
+ * holt sie die Daten einmalig von der alten Netlify-Adresse ab. Fragt Standort, Mikrofon und Kamera
  * direkt bei Android an und reicht die Freigaben an die Web-App weiter.
  */
 public class MainActivity extends Activity {
-    private static final String START_URL = "https://audit-maddin.netlify.app/";
-    private static final String HOST = "audit-maddin.netlify.app";
+    private static final String START_URL = "https://go-range.de/audit/";
+    private static final String HOST = "go-range.de";
+    private static final String OLD_HOST = "audit-maddin.netlify.app";
+    private static final String OLD_MOVE_URL = "https://audit-maddin.netlify.app/?move=auto";
     private static final int REQ_GEO = 1, REQ_MEDIA = 2, REQ_FILE = 3, REQ_CAM = 4;
 
     private WebView web;
@@ -66,10 +69,24 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
-                if (HOST.equals(u.getHost())) return false;
+                String h = u.getHost(), pth = u.getPath() == null ? "" : u.getPath();
+                if ((HOST.equals(h) || ("www." + HOST).equals(h)) && pth.startsWith("/audit")) return false;
+                if (OLD_HOST.equals(h)) return false;
                 // Fremde Links (Anbieter-Seiten, Kosten-Dashboard) im Browser öffnen
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception e) { /* kein Browser */ }
                 return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView v, String url) {
+                Uri u = Uri.parse(url);
+                if (HOST.equals(u.getHost()) || ("www." + HOST).equals(u.getHost())) moveDone();
+            }
+
+            @Override
+            public void onReceivedError(WebView v, WebResourceRequest r, android.webkit.WebResourceError e) {
+                // Alte Adresse nicht erreichbar: ohne Umzug direkt zur neuen
+                if (r.isForMainFrame() && OLD_HOST.equals(r.getUrl().getHost())) { moveDone(); v.loadUrl(START_URL); }
             }
         });
 
@@ -111,7 +128,13 @@ public class MainActivity extends Activity {
             }
         });
 
-        if (b != null) web.restoreState(b); else web.loadUrl(START_URL);
+        if (b != null) web.restoreState(b);
+        else if (!getSharedPreferences("mv", MODE_PRIVATE).getBoolean("done", false)) web.loadUrl(OLD_MOVE_URL);
+        else web.loadUrl(START_URL);
+    }
+
+    private void moveDone() {
+        getSharedPreferences("mv", MODE_PRIVATE).edit().putBoolean("done", true).apply();
     }
 
     private boolean has(String perm) {

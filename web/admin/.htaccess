@@ -1,0 +1,4 @@
+DirectoryIndex index.php
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-store"
+</IfModule>

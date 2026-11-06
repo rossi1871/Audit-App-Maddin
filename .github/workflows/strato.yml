@@ -1,13 +1,19 @@
 name: Auf Strato veröffentlichen
 
-# Lädt die Web-App bei jeder Änderung per SFTP in den Ordner /audit auf dem Strato-Webspace
-# (Subdomain audit.go-range.de). Zugangsdaten kommen aus den GitHub-Secrets
-# STRATO_HOST, STRATO_USER, STRATO_PASS. Ohne Secrets wird der Upload übersprungen.
+# Lädt die Web-App bei jeder Änderung per SFTP auf den Strato-Webspace (go-range.de/audit).
+#  - aktuelle Version nach /audit
+#  - zusätzlich als feste Kopie nach /audit/v/<Version>  (zum Ansehen und Zurückspringen im Dashboard)
+#  - Eintrag in die Update-Historie
+# Secrets: STRATO_HOST, STRATO_USER, STRATO_PASS, optional ADMIN_PASS (Passwort fürs Dashboard).
 on:
   push:
     branches: [main]
     paths: ['index.html', 'sw.js', 'manifest.webmanifest', '*.png', 'web/**', '.github/workflows/strato.yml']
   workflow_dispatch:
+    inputs:
+      backfill:
+        description: 'Ältere Versionen aus der Historie nachladen (Anzahl, 0 = keine)'
+        default: '0'
 
 concurrency: strato
 
@@ -18,8 +24,11 @@ jobs:
       STRATO_HOST: ${{ secrets.STRATO_HOST }}
       STRATO_USER: ${{ secrets.STRATO_USER }}
       STRATO_PASS: ${{ secrets.STRATO_PASS }}
+      ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Secrets vorhanden?
         id: chk
         run: |
@@ -28,11 +37,45 @@ jobs:
           else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
       - name: Dateien zusammenstellen
         if: steps.chk.outputs.ok == '1'
+        env:
+          TITLE: ${{ github.event.head_commit.message }}
+          ACTOR: ${{ github.actor }}
+          BACKFILL: ${{ github.event.inputs.backfill }}
         run: |
-          mkdir site
-          cp index.html sw.js manifest.webmanifest *.png site/
-          cp web/.htaccess site/.htaccess
-          ls -la site
+          set -e
+          VER=$(grep -o 'const VER=[0-9]*' index.html | grep -o '[0-9]*$')
+          echo "Version $VER"
+          APP="index.html sw.js manifest.webmanifest *.png"
+          mkdir -p site/v/$VER site/api/_data/deploys
+          cp $APP site/
+          cp $APP site/v/$VER/
+          cp -r web/. site/
+          # Update-Historie
+          T=$(date +%s)
+          [ -z "$TITLE" ] && TITLE=$(git log -1 --pretty=%s)
+          TITLE=$(printf '%s' "$TITLE" | head -n1 | sed 's/ \[skip netlify\]//')
+          python3 - "$VER" "$T" "$TITLE" "$GITHUB_SHA" "$ACTOR" <<'PY'
+          import json,sys
+          v,t,title,sha,actor=sys.argv[1:]
+          d={'ver':int(v),'t':int(t),'title':title,'sha':sha,'actor':actor,'kind':'github'}
+          open(f'site/api/_data/deploys/{t}-{v}.json','w').write(json.dumps(d,ensure_ascii=False))
+          open('site/api/_data/current.json','w').write(json.dumps({'ver':int(v),'t':int(t),'kind':'github'}))
+          PY
+          # Dashboard-Passwort (nur als Hash)
+          if [ -n "$ADMIN_PASS" ]; then php -r 'echo password_hash(getenv("ADMIN_PASS"), PASSWORD_DEFAULT);' > site/api/_data/admin_hash; fi
+          # Ältere Versionen nachladen
+          N=${BACKFILL:-0}
+          if [ "$N" -gt 0 ]; then
+            git log --pretty='%H %ct %s' -n 400 -- index.html | grep -E ' Version [0-9]+' | while read -r SHA CT MSG; do
+              V=$(printf '%s' "$MSG" | grep -oE 'Version [0-9]+' | head -n1 | grep -oE '[0-9]+')
+              [ -d site/v/$V ] && continue
+              mkdir -p site/v/$V
+              for f in index.html sw.js manifest.webmanifest icon-192.png icon-512.png; do git show $SHA:$f > site/v/$V/$f 2>/dev/null || rm -f site/v/$V/$f; done
+              python3 -c "import json,sys;print(json.dumps({'ver':int(sys.argv[1]),'t':int(sys.argv[2]),'title':sys.argv[3],'sha':sys.argv[4],'kind':'github'},ensure_ascii=False))" "$V" "$CT" "$MSG" "$SHA" > site/api/_data/deploys/$CT-$V.json
+              N=$((N-1)); [ "$N" -le 0 ] && break
+            done
+          fi
+          find site -type f | sort
       - name: lftp installieren
         if: steps.chk.outputs.ok == '1'
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
@@ -40,5 +83,12 @@ jobs:
         if: steps.chk.outputs.ok == '1'
         run: |
           lftp -e "set sftp:auto-confirm yes; set net:max-retries 3; set net:timeout 30; \
-            mkdir -p -f audit; mirror -R --verbose --no-perms site/ audit/; cls -l audit/; bye" \
+            mkdir -p -f audit; mirror -R --no-perms site/ audit/; bye" \
             -u "$STRATO_USER","$STRATO_PASS" "sftp://$STRATO_HOST"
+      - name: Prüfen
+        if: steps.chk.outputs.ok == '1'
+        run: |
+          sleep 3
+          curl -sS -m 20 "https://go-range.de/audit/api/move.php?a=ping" ; echo
+          curl -sS -m 20 -o /dev/null -w "admin: %{http_code}\n" "https://go-range.de/audit/admin/"
+          curl -sS -m 20 -o /dev/null -w "data (soll 403): %{http_code}\n" "https://go-range.de/audit/api/_data/current.json"

@@ -156,8 +156,109 @@ button,.chip,.lnk,.lg,.li,.cb,.cbw{touch-action:manipulation;-webkit-user-select
  [data-a=adr]{padding:10px 0;margin:-10px 0}
 }
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
+<script>/* V145: Umzug auf go-range.de/audit, Versions-Vorschau, Zugriffsstatistik */
+(function(){
+const MV=Object.assign({old:['audit-maddin.netlify.app'],nu:'https://go-range.de/audit/',api:'https://go-range.de/audit/api/',home:['go-range.de']},window.MV_OVR||{});
+window.MV=MV;
+const de=(()=>{try{return(localStorage.getItem('aa_lang')||'de')==='de'}catch(e){return true}})();
+const T=(d,e)=>de?d:e;
+const isOld=MV.old.includes(location.host);
+const pv=location.pathname.match(/\/v\/(\d+)\/?/);window.PREVIEW=pv?+pv[1]:0;
+const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const ub64=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+const CH=2*1024*1024;
+function box(html){let o=document.getElementById('mvbox');if(!o){o=document.createElement('div');o.id='mvbox';o.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(11,20,38,.96);color:#e8eefb;display:flex;align-items:center;justify-content:center;padding:24px;font:16px/1.5 system-ui,-apple-system,sans-serif';document.body.appendChild(o)}
+ o.innerHTML='<div style="max-width:420px;width:100%;text-align:center"><img src="icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px;margin-bottom:14px">'+html+'</div>';return o}
+const btn=(id,t,pri)=>'<button id="'+id+'" style="display:block;width:100%;margin:10px 0 0;padding:14px;border-radius:12px;font-size:16px;border:1px solid #5898f4;'+(pri?'background:#5898f4;color:#fff':'background:transparent;color:#5898f4')+'">'+t+'</button>';
+const on=(id,f)=>{const e=document.getElementById(id);if(e)e.onclick=f};
+async function retry(f,n=3){let e;for(let i=0;i<n;i++){try{return await f()}catch(x){e=x;await new Promise(r=>setTimeout(r,800*(i+1)))}}throw e}
+function idbAll(){return new Promise(ok=>{try{const q=indexedDB.open('aa_img',1);q.onupgradeneeded=()=>q.result.createObjectStore('i');q.onerror=()=>ok({});q.onsuccess=()=>{const db=q.result,o={};try{const c=db.transaction('i').objectStore('i').openCursor();c.onsuccess=()=>{const r=c.result;if(r){o[r.key]=r.value;r.continue()}else ok(o)};c.onerror=()=>ok(o)}catch(e){ok(o)}}}catch(e){ok({})}})}
+function idbPut(o){return new Promise(ok=>{try{const q=indexedDB.open('aa_img',1);q.onupgradeneeded=()=>q.result.createObjectStore('i');q.onerror=()=>ok(false);q.onsuccess=()=>{const t=q.result.transaction('i','readwrite');const s=t.objectStore('i');for(const k in o)s.put(o[k],k);t.oncomplete=()=>ok(true);t.onerror=t.onabort=()=>ok(false)}}catch(e){ok(false)}})}
+function lsAll(){const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k!=='aa_moved')o[k]=localStorage.getItem(k)}}catch(e){}return o}
+const hasData=()=>{try{return!!localStorage.getItem('aa_audits')||!!localStorage.getItem('aa_lang')||!!localStorage.getItem('aa_prof')}catch(e){return false}};
+
+/* ---------- alte Adresse: Daten verschlüsselt mitnehmen ---------- */
+async function send(){
+ const st=m=>box('<h2 style="margin:0 0 8px">'+T('Daten werden übertragen …','Transferring data …')+'</h2><p id="mvst" style="color:#93a3c3">'+m+'</p>');
+ try{st(T('Daten werden zusammengestellt.','Collecting data.'));
+  const ls=lsAll(),img=await idbAll();
+  const plain=new TextEncoder().encode(JSON.stringify({app:'audit-kalkulationstool',kind:'move',t:Date.now(),ls,img}));
+  const key=crypto.getRandomValues(new Uint8Array(32)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const k=await crypto.subtle.importKey('raw',key,'AES-GCM',false,['encrypt']);
+  const enc=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,plain));
+  const all=new Uint8Array(12+enc.length);all.set(iv,0);all.set(enc,12);
+  const id=[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');
+  const of=Math.max(1,Math.ceil(all.length/CH));
+  for(let n=0;n<of;n++){st(T('Übertragen: ','Uploaded: ')+Math.round(n/of*100)+' % ('+(all.length/1048576).toFixed(1)+' MB)');
+   await retry(async()=>{const r=await fetch(MV.api+'move.php?a=put&id='+id+'&n='+n+'&of='+of,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:all.subarray(n*CH,(n+1)*CH)});if(!r.ok)throw new Error('HTTP '+r.status)})}
+  try{localStorage.setItem('aa_moved',String(Date.now()))}catch(e){}
+  location.href=MV.nu+'#move='+id+'.'+b64u(key);
+ }catch(e){box('<h2 style="margin:0 0 8px">'+T('Übertragung fehlgeschlagen','Transfer failed')+'</h2><p style="color:#93a3c3">'+T('Bitte Internetverbindung prüfen und erneut versuchen. Deine Daten hier bleiben unverändert.','Please check the connection and try again. Your data here is unchanged.')+'<br><small>'+String(e&&e.message||e)+'</small></p>'+btn('mvr',T('Erneut versuchen','Try again'),1)+btn('mvl',T('Später','Later')));
+  on('mvr',send);on('mvl',()=>document.getElementById('mvbox').remove())}
+}
+function oldScreen(){
+ const auto=/[?&]move=auto/.test(location.search);
+ if(!hasData()){if(auto)location.replace(MV.nu);else{box('<h2 style="margin:0 0 8px">'+T('Die App ist umgezogen','The app has moved')+'</h2><p style="color:#93a3c3">'+T('Neue Adresse:','New address:')+'<br><b style="color:#e8eefb">go-range.de/audit</b></p>'+btn('mvg',T('Zur neuen Adresse','Go to the new address'),1));on('mvg',()=>location.href=MV.nu)}return}
+ if(auto){send();return}
+ let moved=0;try{moved=+localStorage.getItem('aa_moved')||0}catch(e){}
+ box('<h2 style="margin:0 0 8px">'+T('Die App ist umgezogen','The app has moved')+'</h2><p style="color:#93a3c3">'+T('Neue Adresse:','New address:')+' <b style="color:#e8eefb">go-range.de/audit</b><br>'+
+  (moved?T('Deine Daten wurden am '+new Date(moved).toLocaleString('de-CH')+' übertragen.','Your data was transferred on '+new Date(moved).toLocaleString()+'.'):T('Deine Audits, Fotos und Einstellungen kommen verschlüsselt mit. Hier bleibt alles unverändert erhalten.','Your audits, photos and settings move along, encrypted. Everything stays unchanged here.'))+'</p>'+
+  (moved?btn('mvg',T('Zur neuen Adresse','Go to the new address'),1)+btn('mvs',T('Daten nochmals übertragen','Transfer data again')):btn('mvs',T('Daten mitnehmen und wechseln','Take my data and switch'),1)+btn('mvg',T('Ohne Daten wechseln','Switch without data')))+
+  '<p style="margin:14px 0 0"><a href="#" id="mvl" style="color:#93a3c3;font-size:14px">'+T('Vorerst hier bleiben','Stay here for now')+'</a></p>'+
+  '<p style="color:#93a3c3;font-size:13px;margin-top:14px">'+T('Auf dem iPhone danach die App vom Home-Bildschirm löschen und von der neuen Adresse aus neu hinzufügen.','On iPhone, then remove the app from the home screen and add it again from the new address.')+'</p>');
+ on('mvs',send);on('mvg',()=>location.href=MV.nu);on('mvl',e=>{e.preventDefault();document.getElementById('mvbox').remove()});
+}
+
+/* ---------- neue Adresse: Daten übernehmen ---------- */
+async function receive(id,kb){
+ window.MOVE_LOCK=true;
+ const st=m=>box('<h2 style="margin:0 0 8px">'+T('Daten werden übernommen …','Importing data …')+'</h2><p style="color:#93a3c3">'+m+'</p>');
+ try{st(T('Verbindung wird aufgebaut.','Connecting.'));
+  const inf=await retry(async()=>{const r=await fetch(MV.api+'move.php?a=info&id='+id,{cache:'no-store'});if(r.status===404)throw Object.assign(new Error(T('Die Übertragung wurde nicht gefunden oder ist abgelaufen.','Transfer not found or expired.')),{fatal:1});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},2);
+  if(inf.have<inf.of)throw new Error(T('Die Übertragung ist unvollständig.','The transfer is incomplete.'));
+  const parts=[];let tot=0;
+  for(let n=0;n<inf.of;n++){st(T('Geladen: ','Loaded: ')+Math.round(n/inf.of*100)+' %');const b=await retry(async()=>{const r=await fetch(MV.api+'move.php?a=get&id='+id+'&n='+n,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return new Uint8Array(await r.arrayBuffer())});parts.push(b);tot+=b.length}
+  const all=new Uint8Array(tot);let o=0;for(const p of parts){all.set(p,o);o+=p.length}
+  const k=await crypto.subtle.importKey('raw',ub64(kb),'AES-GCM',false,['decrypt']);
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:all.subarray(0,12)},k,all.subarray(12));
+  const d=JSON.parse(new TextDecoder().decode(plain));
+  if(!d||d.app!=='audit-kalkulationstool'||!d.ls)throw new Error(T('Die Daten sind ungültig.','Invalid data.'));
+  st(T('Fotos werden gespeichert.','Saving photos.'));
+  await idbPut(d.img||{});
+  try{const prev=localStorage.getItem('aa_audits');if(prev)localStorage.setItem('aa_audits_prev',prev)}catch(e){}
+  for(const key in d.ls){try{localStorage.setItem(key,d.ls[key])}catch(e){}}
+  try{localStorage.setItem('aa_movedin',String(Date.now()))}catch(e){}
+  fetch(MV.api+'move.php?a=del&id='+id,{method:'POST'}).catch(()=>{});
+  let n=0;try{n=(JSON.parse(d.ls.aa_audits||'{}').audits||[]).length}catch(e){}
+  box('<h2 style="margin:0 0 8px">'+T('Umzug abgeschlossen','Move complete')+'</h2><p style="color:#93a3c3">'+n+T(n===1?' Audit übernommen.':' Audits übernommen.',n===1?' audit imported.':' audits imported.')+'</p>'+btn('mvok',T('App öffnen','Open app'),1));
+  on('mvok',()=>location.replace(location.pathname));
+ }catch(e){window.MOVE_LOCK=false;
+  box('<h2 style="margin:0 0 8px">'+T('Übernahme fehlgeschlagen','Import failed')+'</h2><p style="color:#93a3c3">'+String(e&&e.message||e)+'</p>'+(e&&e.fatal?'':btn('mvr',T('Erneut versuchen','Try again'),1))+btn('mvx',T('Ohne Daten fortfahren','Continue without data')));
+  on('mvr',()=>receive(id,kb));on('mvx',()=>location.replace(location.pathname))}
+}
+
+/* ---------- Vorschau einer älteren Version ---------- */
+function previewBar(){const b=document.createElement('div');b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#b45309;color:#fff;text-align:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom));font:14px system-ui,sans-serif';b.textContent=T('Vorschau Version '+window.PREVIEW+' – nur ansehen, nicht damit weiterarbeiten','Preview of version '+window.PREVIEW+' – view only');document.body.appendChild(b)}
+
+/* ---------- Zugriffsstatistik (ohne Cookies) ---------- */
+function hit(){try{if(!MV.home.includes(location.host)||window.PREVIEW)return;const ss='aa_hit';if(sessionStorage.getItem(ss))return;sessionStorage.setItem(ss,'1');
+ const m=window.AndroidBridge?'app':(matchMedia('(display-mode: standalone)').matches||navigator.standalone)?'pwa':'web';
+ let l='de';try{l=localStorage.getItem('aa_lang')||'de'}catch(e){}
+ const body=JSON.stringify({v:typeof VER!=='undefined'?VER:'',l,m});
+ if(!(navigator.sendBeacon&&navigator.sendBeacon(MV.api+'hit.php',new Blob([body],{type:'text/plain'}))))fetch(MV.api+'hit.php',{method:'POST',body,keepalive:true}).catch(()=>{})}catch(e){}}
+
+const mh=location.hash.match(/^#move=([a-f0-9]{32})\.([\w-]+)$/);
+if(mh)window.MOVE_LOCK=true;
+document.addEventListener('DOMContentLoaded',()=>{
+ if(mh){history.replaceState(null,'',location.pathname+location.search);receive(mh[1],mh[2]);return}
+ if(isOld){oldScreen();return}
+ if(window.PREVIEW)previewBar();
+});
+addEventListener('load',()=>{if(!mh&&!isOld)setTimeout(hit,1500)});
+})();
+</script>
 <script>
-const VER=144;
+const VER=145;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -1526,7 +1627,7 @@ function imgPut(k,u){if(IMGSAVED.has(k)||IMGPEND.has(k))return;IMGPEND.add(k);id
 function imgGet(k){return idb().then(d=>new Promise((ok,no)=>{const r=d.transaction('i').objectStore('i').get(k);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}))}
 function saveErr(on){if(S.saveErr===on)return;S.saveErr=on;let e=document.getElementById('saveerr');if(!on){if(e)e.remove();return}if(!e){e=document.createElement('div');e.id='saveerr';e.setAttribute('role','alert');e.style.cssText='position:fixed;left:0;right:0;top:0;z-index:99;background:#b3261e;color:#fff;padding:10px 16px;font:600 14px system-ui;text-align:center';document.body.appendChild(e)}
  const m={en:'Warning: the browser could not save your data. Please do not reload the page.',fr:'Attention : le navigateur n’a pas pu enregistrer vos données. Ne rechargez pas la page.',it:'Attenzione: il browser non ha potuto salvare i dati. Non ricaricare la pagina.'};e.setAttribute('data-nt','');e.textContent=m[S.lang]||'Achtung: Der Browser konnte den Stand nicht speichern. Bitte die Seite nicht neu laden.'}
-function persist(){try{snapAuto()}catch(e){}try{const empty=!S.obs.length&&!S.pts.length&&!S.addr&&!S.cur.named;const list=S.audits.slice();
+function persist(){if(window.MOVE_LOCK)return;try{snapAuto()}catch(e){}try{const empty=!S.obs.length&&!S.pts.length&&!S.addr&&!S.cur.named;const list=S.audits.slice();
  if(!empty||S.curSt==='done'){const st=(S.curSt==='done'&&S.sig===sigNow())?'done':'open';const rec={id:S.aid,upd:Date.now(),cu:S.cur.cu,trk:S.cur.trk,name:S.cur.name,named:S.cur.named,rt:S.cur.rt,cc:S.cur.cc,air:S.cur.air,addr:S.addr,prof:S.prof,pf:S.pf,spellOn:S.spellOn,spell:S.spell,obs:S.obs,pts:S.pts,grp:S.grp,room:S.room,vi:S.vi,pi:S.pi,pend:[],st};const i=list.findIndex(a=>a.id===S.aid);if(i>=0)list[i]=rec;else list.push(rec);}
  const slim=list.map(a=>({...a,pend:[],obs:a.obs.map(o=>{const c={...o};if(c.audio){delete c.audio;if(!c.au)c.audioLost=true}delete c._aq;if(Array.isArray(c.pics))c.pics=c.pics.map(p=>{const q={...p};if(typeof q.img==='string'&&q.img.indexOf('data:')===0){const k=imgKey(q.img);imgPut(k,q.img);q.img='idb:'+k}return q});if(c.off){c.off=false}delete c.trBusy;if(typeof c.img==='string'&&c.img.indexOf('data:')===0){const k=imgKey(c.img);imgPut(k,c.img);c.img='idb:'+k}return c})}));
  if(S.restoreFail){saveErr(true);return}
@@ -1856,4 +1957,4 @@ document.addEventListener('pointermove',e=>{if(!sw)return;const dx=e.clientX-sw.
 document.addEventListener('pointerup',()=>{if(!sw)return;const{el,dx}=sw;sw=null;if(Math.abs(dx)>10){S.moved=true;setTimeout(()=>S.moved=false,60);}if(dx<-80)setLater(el.dataset.id);else el.firstElementChild.style.transform='';});
 /* V88: Nur neu zeichnen, wenn zwischen Handy- und PC-Ansicht gewechselt wird. Das Einblenden der Tastatur (iPhone) löst sonst eine Endlosschleife aus. */
 let LWIDE=innerWidth>=900;addEventListener('resize',()=>{const d=innerWidth>=900;if(d===LWIDE)return;LWIDE=d;R2()});R();
-</script><script>try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}</script></body></html>
+</script><script>try{if(!window.PREVIEW&&'serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}</script></body></html>
