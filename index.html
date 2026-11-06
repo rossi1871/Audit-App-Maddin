@@ -138,7 +138,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=139;
+const VER=140;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -436,6 +436,10 @@ function dirtyUI(){
  if(S.rm&&S.rmSnap!==undefined){S.rmDirty=rmCur()!==S.rmSnap;const b=document.getElementById('rmsaveb');if(b)b.className=S.rmDirty?'pri':'sec'}
  if(S.oe!=null&&S.oeSnap!==undefined){S.oeDirty=oeCur()!==S.oeSnap;const b=document.getElementById('oesaveb');if(b)b.className=S.oeDirty?'pri':'sec'}
  if(S.adrForm&&S.adrSnap!==undefined){S.adrDirty=adrCur()!==S.adrSnap;const b=document.getElementById('adrsaveb');if(b)b.className=S.adrDirty?'pri':'sec'}}
+/* V140: Fokussiertes Feld in Fenstern (Bearbeiten, Einstellungen) über der Tastatur halten */
+function kbFit(){const a=document.activeElement;if(!a||!/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;const c=a.closest('.modal>div,.sh');if(!c)return;const vv=window.visualViewport,vh=vv?vv.height:innerHeight,top=vv?vv.offsetTop:0;const r=a.getBoundingClientRect();if(r.bottom>top+vh-16||r.top<top+8){c.scrollTop+=r.top-(top+vh*0.35)}}
+addEventListener('focusin',e=>{if(e.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.closest('.modal>div,.sh')){setTimeout(kbFit,350);setTimeout(kbFit,700)}});
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>setTimeout(kbFit,50));
 document.addEventListener('input',dirtyUI);document.addEventListener('change',dirtyUI);
 addEventListener('change',e=>{if(e.target&&e.target.id==='stt_m'){try{localStorage.setItem('aa_sttm',e.target.value)}catch(x){}toast('Modell für die Spracherkennung gewählt.')}});
 function rmDraft(){S.rmd={mon:gv('rm_mon'),srv:gv('rm_srv'),km:gv('rm_km'),dc:gv('rm_dc'),fx:gv('rm_fx'),mg:gv('rm_mg')}}
