@@ -92,3 +92,5 @@ jobs:
           curl -sS -m 20 "https://go-range.de/audit/api/move.php?a=ping" ; echo
           curl -sS -m 20 -o /dev/null -w "admin: %{http_code}\n" "https://go-range.de/audit/admin/"
           curl -sS -m 20 -o /dev/null -w "data (soll 403): %{http_code}\n" "https://go-range.de/audit/api/_data/current.json"
+          echo "Symbol lokal: $(md5sum < icon-192.png)"; echo "Symbol live:  $(curl -sS -m 20 https://go-range.de/audit/icon-192.png | md5sum)"
+          curl -sS -m 20 -I https://go-range.de/audit/icon-192.png | grep -i 'cache-control' || true
