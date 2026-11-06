@@ -90,7 +90,7 @@ function stats(string $D, int $days = 30): array {
         if (is_file($f)) {
             $fh = fopen($f, 'r');
             while ($fh && ($line = fgets($fh)) !== false) {
-                $r = json_decode($line, true); if (!$r) continue;
+                $r = json_decode($line, true); if (!$r || (($r['k'] ?? 's') !== 's')) continue;
                 $hits++; $u[$r['u'] ?? ''] = 1;
                 foreach (['dev' => 'd', 'lang' => 'l', 'ver' => 'v', 'mode' => 'm'] as $k => $s) { $x = ($r[$s] ?? '') ?: '–'; $out[$k][$x] = ($out[$k][$x] ?? 0) + 1; }
             }
@@ -141,7 +141,9 @@ table{width:100%;border-collapse:collapse}td,th{padding:9px 6px;border-bottom:1p
   <?php if ($err): ?><div class="msg err"><?= h($err) ?></div><?php endif; ?>
   <form method="post"><label class="mu" for="pw">Passwort</label><input id="pw" type="password" name="pw" autocomplete="current-password" autofocus required>
   <button class="btn pri" type="submit" style="width:100%">Anmelden</button></form></div>
-<?php else:
+<?php else: ?>
+  <nav style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><a class="btn pri" href="./">Übersicht &amp; Updates</a><a class="btn" href="analytics.php">Analytics</a></nav>
+<?php
   $DEP = deploys($D); $V = versions($ROOT); $cur = readJson($D . '/current.json', []); $curV = (int)($cur['ver'] ?? 0);
   $S = stats($D, 30); $today = end($S['days']); $wk = array_slice($S['days'], -7);
   $wkH = array_sum(array_column($wk, 'h')); $mx = max(1, max(array_column($S['days'], 'h')));

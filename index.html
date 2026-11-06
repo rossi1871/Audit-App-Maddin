@@ -240,12 +240,29 @@ async function receive(id,kb){
 /* ---------- Vorschau einer älteren Version ---------- */
 function previewBar(){const b=document.createElement('div');b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#b45309;color:#fff;text-align:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom));font:14px system-ui,sans-serif';b.textContent=T('Vorschau Version '+window.PREVIEW+' – nur ansehen, nicht damit weiterarbeiten','Preview of version '+window.PREVIEW+' – view only');document.body.appendChild(b)}
 
-/* ---------- Zugriffsstatistik (ohne Cookies) ---------- */
-function hit(){try{if(!MV.home.includes(location.host)||window.PREVIEW)return;const ss='aa_hit';if(sessionStorage.getItem(ss))return;sessionStorage.setItem(ss,'1');
+/* ---------- Zugriffsstatistik (ohne Cookies, ohne Inhalte) ---------- */
+const AON=()=>MV.home.includes(location.host)&&!window.PREVIEW;
+const T0=Date.now();
+function send2(o){try{if(!AON())return;let l='de';try{l=localStorage.getItem('aa_lang')||'de'}catch(e){}
  const m=window.AndroidBridge?'app':(matchMedia('(display-mode: standalone)').matches||navigator.standalone)?'pwa':'web';
- let l='de';try{l=localStorage.getItem('aa_lang')||'de'}catch(e){}
- const body=JSON.stringify({v:typeof VER!=='undefined'?VER:'',l,m});
+ const body=JSON.stringify(Object.assign({v:typeof VER!=='undefined'?VER:'',l,m,brave:navigator.brave?1:0},o));
  if(!(navigator.sendBeacon&&navigator.sendBeacon(MV.api+'hit.php',new Blob([body],{type:'text/plain'}))))fetch(MV.api+'hit.php',{method:'POST',body,keepalive:true}).catch(()=>{})}catch(e){}}
+function hit(){try{if(!AON())return;if(sessionStorage.getItem('aa_hit'))return;sessionStorage.setItem('aa_hit','1');
+ const w=Math.min(screen.width,screen.height),sc=w<600?'phone':w<1000?'tablet':'desktop';
+ let r='';try{if(document.referrer)r=new URL(document.referrer).hostname}catch(e){}
+ const q=new URLSearchParams(location.search);const cp=q.get('utm_campaign')||q.get('utm_source')||q.get('ref')||'';
+ let f=0;try{f=localStorage.getItem('aa_tour')||localStorage.getItem('aa_audits')?0:1}catch(e){}
+ let ms=0;try{const n=performance.getEntriesByType('navigation')[0];ms=Math.round(n?n.loadEventEnd||n.domContentLoadedEventEnd:Date.now()-T0)}catch(e){}
+ send2({k:'s',sc,r,cp,f,ms})}catch(e){}}
+/* Funktionen, die gezählt werden (nur der Name der Funktion, nie Inhalte) */
+const EVM={hnew:'start',newwalk:'walk',swnew:'start',voice:'voice',photo:'photo',shot:'photo',text:'text',calc:'calc',fin:'finish',doc:'word',xls:'excel',rsend:'report',repsend:'report',repmail:'mail',repshare:'share',repcopy:'copy',bakexp:'backup',setlang:'lang',tour:'help',geoaddr:'gps',geouse:'gps',spfix:'typo',spall:'typo',aiall:'ai',deldo:'delete',reopen:'reopen',cfg:'settings',geomap:'map',undo:'undo',wzgo:'setup',netsetup:'net'};
+const EVT={};
+window.AEV={click(a,v){const n=EVM[a];if(!n)return;const k=n+'|'+(n==='lang'?v:'');if(Date.now()-(EVT[k]||0)<1500)return;EVT[k]=Date.now();send2({k:'x',n,nv:n==='lang'?String(v||''):''})},
+ ai(e){try{send2({k:'a',md:String(e.m||''),ak:String(e.k||'ai'),usd:+e.u||0})}catch(x){}}};
+let ERRN=0;addEventListener('error',e=>{if(ERRN++>=5)return;try{send2({k:'q',msg:String(e.message||'Fehler'),src:String((e.filename||'').split('/').pop()||'')+':'+(e.lineno||0)})}catch(x){}});
+addEventListener('unhandledrejection',e=>{if(ERRN++>=5)return;try{const r=e.reason;send2({k:'q',msg:'Promise: '+String(r&&r.message||r||'').slice(0,140),src:''})}catch(x){}});
+let ENDS=0;const endS=()=>{if(ENDS)return;ENDS=1;send2({k:'e',du:Math.round((Date.now()-T0)/1000)})};
+addEventListener('pagehide',endS);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')endS()});
 
 const mh=location.hash.match(/^#move=([a-f0-9]{32})\.([\w-]+)$/);
 if(mh)window.MOVE_LOCK=true;
@@ -258,7 +275,7 @@ addEventListener('load',()=>{if(!mh&&!isOld)setTimeout(hit,1500)});
 })();
 </script>
 <script>
-const VER=145;
+const VER=146;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -445,7 +462,7 @@ const sttUsd=m=>(SMOD.find(x=>x[0]===m)||[0,0,0.006])[2];
 function cPrice(m,p,inT){const r=CPR.find(x=>x[0].test(String(m||'')));const d=p==='claude'?[0,2,10]:[0,2.5,10];const q=r||d;return inT>100000&&q[3]!=null?[q[3],q[4]]:[q[1],q[2]]}
 function cuid(){if(!S.cur.cu)S.cur.cu=Date.now().toString(36)+Math.random().toString(36).slice(2,6);return S.cur.cu}
 function cGet(){try{const v=JSON.parse(localStorage.getItem('aa_cost')||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
-let CLX=null;function cLog(e){try{if(CLX)Object.assign(e,CLX);if(e.k==='stt')e.u=(e.s||0)/60*sttUsd(e.m);else{const[pi,po]=cPrice(e.m,e.p,e.i||0);e.u=((e.i||0)*pi+(e.o||0)*po)/1e6}e.t=Date.now();e.cu=e.cu||cuid();e.an=e.an||S.cur.name;let L=cGet();L.push(e);if(L.length>8000)L=L.slice(-8000);localStorage.setItem('aa_cost',JSON.stringify(L))}catch(x){}}
+let CLX=null;function cLog(e){try{if(CLX)Object.assign(e,CLX);if(e.k==='stt')e.u=(e.s||0)/60*sttUsd(e.m);else{const[pi,po]=cPrice(e.m,e.p,e.i||0);e.u=((e.i||0)*pi+(e.o||0)*po)/1e6}try{window.AEV&&AEV.ai(e)}catch(x){}e.t=Date.now();e.cu=e.cu||cuid();e.an=e.an||S.cur.name;let L=cGet();L.push(e);if(L.length>8000)L=L.slice(-8000);localStorage.setItem('aa_cost',JSON.stringify(L))}catch(x){}}
 /* ===== V111: Wechselkurse automatisch (EZB über Frankfurter, Ersatz: ExchangeRate-API). Eigene Eingabe hat immer Vorrang ===== */
 function fxGet(){try{return JSON.parse(localStorage.getItem('aa_fxauto')||'null')}catch(e){return null}}
 function fxRate(from,to){from=String(from||'').toUpperCase();to=String(to||'').toUpperCase();if(!from||!to)return null;if(from===to)return 1;const f=fxGet();if(!f||!f.rates)return null;const r=f.rates,a=from==='USD'?1:r[from],b=to==='USD'?1:r[to];return a>0&&b>0?b/a:null}
@@ -1756,7 +1773,7 @@ document.addEventListener('change',e=>{const t=e.target;if(t&&t.id==='oem'){S.oe
  imgShrink(f,url=>{if(!url){toast('Das Bild konnte nicht gelesen werden.');R();return}if(rp!=null&&S.obs[rp]){const x=S.obs[rp];x.img=url;delete x.imgLost;R();return}const o={k:'t',t:'',img:url};add(o);R();aiStep(o);});});
 document.addEventListener('click',e=>{
  if(S.moved){S.moved=false;return}
- const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v;
+ const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v;try{window.AEV&&AEV.click(a,v)}catch(x){}
  if((a==='shx'||a==='swx'||a==='cfgx')&&e.target!==t)return;
  if(a==='noop')return;
  const prevSc=S.sc;
