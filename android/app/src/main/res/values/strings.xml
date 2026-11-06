@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Audit-Tool</string>
+    <color name="ic_bg">#0B1426</color>
     <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar">
         <item name="android:windowBackground">#0b1220</item>
         <item name="android:statusBarColor">#0b1220</item>
