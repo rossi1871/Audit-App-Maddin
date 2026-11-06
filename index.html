@@ -72,7 +72,7 @@ h2{font-size:24px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
 textarea{width:100%;min-height:80px;border:1.5px solid var(--ac);border-radius:12px;padding:10px;font:inherit;background:var(--sf);color:inherit}
 .hint{font-size:13px;color:var(--mu);background:var(--sf2);border:1px dashed var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:12px}
 .sm{font-size:13px;color:var(--mu)}
-.fi{width:100%;border:1.5px solid var(--ln);border-radius:10px;padding:10px;font:inherit;background:var(--sf);color:inherit;display:block}
+.fi{width:100%;border:1.5px solid var(--ln);border-radius:10px;padding:10px;font:inherit;background:var(--sf);color:inherit;display:block}.fi.gf{border-color:var(--ac);background:var(--acb)}
 .fi:focus{border-color:var(--ac);outline:0}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .lbl{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em}.big{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.cbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--ln);margin:10px 0 6px}.cbar i{display:block;height:100%}.cl{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:9px 0;border-top:1px solid var(--ln);font-size:14px}.cl small{grid-column:1/-1;color:var(--mu)}.amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.cr{display:flex;gap:8px;align-items:center;margin-top:6px}.cr .fi{padding:8px}.cs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.cs>div{background:var(--sf2);border-radius:10px;padding:10px}.cs b{display:block;font-size:18px}.chip{cursor:pointer}.modal>div{max-height:92%;overflow:auto}
@@ -138,7 +138,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=127;
+const VER=128;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -173,7 +173,7 @@ function archive(){const empty=!S.obs.length&&!S.pts.length&&!S.addr&&!S.cur.nam
  const i=S.audits.findIndex(a=>a.id===S.aid);if(i>=0)S.audits[i]=rec;else S.audits.push(rec);
  const m=new Map();S.audits.forEach(a=>m.set(a.name,{name:a.name,addr:a.addr,rt:a.rt}));S.objs=[...m.values()];}
 function load(t){Object.assign(S,{aid:t.id,cur:{name:t.name,named:t.named,rt:t.rt,cc:t.cc,air:t.air,cu:t.cu,trk:t.trk},addr:t.addr,prof:t.prof,pf:t.pf||[],spellOn:t.spellOn!==false,spell:t.spell||{},spellAsk:false,obs:t.obs,pts:t.pts,grp:t.grp||null,room:t.room,vi:t.vi,pi:t.pi,pend:t.pend||[],sc:'walk',sheet:false,sw:false,tab:'open',ex:null,toast:null,adrForm:false,curSt:t.st});S.sig=sigNow();}
-function startNew(){archive();aidc++;Object.assign(S,{aid:aidc,sc:'start',prof:null,pf:[],spellOn:true,spell:{},spellAsk:false,obs:[],pts:[],grp:null,vi:0,pi:0,sheet:false,sw:false,tab:'open',ex:null,pend:[],room:null,on:navigator.onLine!==false,toast:null,addr:null,adrForm:false,curSt:'open',sig:'',cur:{name:defName(),named:false}});}
+function startNew(){archive();aidc++;S.liveAid=aidc;Object.assign(S,{aid:aidc,sc:'start',prof:null,pf:[],spellOn:true,spell:{},spellAsk:false,obs:[],pts:[],grp:null,vi:0,pi:0,sheet:false,sw:false,tab:'open',ex:null,pend:[],room:null,on:navigator.onLine!==false,toast:null,addr:null,adrForm:false,curSt:'open',sig:'',cur:{name:defName(),named:false}});}
 function swSheet(){const others=S.audits.filter(a=>S.sc==='walk'?a.id!==S.aid:true).slice().reverse();
  const cnt=a=>`${esc(a.prof||'')} · ${a.obs.length} Erfassungen · ${a.pts.filter(x=>x.st!=='done').length} offene Punkte${a.addr?' · '+esc(fmtA(a.addr)):''}`;
  return`<div class="sheet" data-a="swx"><div class="sh"><div class="grip"></div><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:20px;margin:0">Audits</h2><button class="ib" data-a="swc">×</button></div>
@@ -463,11 +463,12 @@ function oeModal(){if(S.oe==null||!S.obs[S.oe])return'';const x=S.obs[S.oe];cons
 <p class="sm" style="margin:10px 0 2px">Kalkulation (optional) · Währung für alle Beträge: <b>${baseCur()}</b> (gilt für das ganze Objekt, Änderung unter «Sätze anpassen»)</p>${(S.oeC||[]).map(lineEd).join('')}<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button class="chip" data-a="cadd" data-v="w">+ Arbeit</button><button class="chip" data-a="cadd" data-v="m">+ Material</button><button class="chip" data-a="hadd">+ Hinweis</button></div><button class="sec" data-a="oeai" style="width:100%;margin:0 0 8px"${S.aiBusy?' disabled':''}>${S.aiBusy?'KI schätzt …':'Preise und Aufwand per KI vorschlagen'}</button><p class="sm" style="margin:0 0 8px">Die KI füllt nur leere Werte und ergänzt notwendiges Zubehör. Eigene Eingaben haben immer Vorrang.</p>${hintBox()}
 <div class="act"><button id="oesaveb" class="${S.oeDirty?'pri':'sec'}" data-a="oesave">Speichern</button><button class="sec" data-a="oerep">${x.img?'Foto ersetzen':'Foto hinzufügen'}</button>${x.img?'<button class="sec" data-a="oeimgx">Foto entfernen</button>':''}<button class="sec" data-a="oedel">Löschen</button><button class="sec" data-a="oeno">Abbrechen</button></div></div></div>`;}
 function adrModal(){if(!S.adrForm)return'';const a=S.addr||{str:'',plz:'',ort:''};const v=t=>esc(t||'').replace(/"/g,'&quot;');const nmv=S.adrNm!==undefined?S.adrNm:S.cur.name;
- const X=S.adrX||{};const F=[['zus','Postfach / c/o / Zusatz','Postfach / c/o','off'],['land','Land','Land','country-name'],['info','Zugang & Hinweise','Zugang & Hinweise','off'],['mail','E-Mail des Kunden','E-Mail des Kunden','email']];
+ const X=S.adrX||{};const F=[['zus','Postfach / c/o / Zusatz','Postfach / c/o','off'],['info','Zugang & Hinweise','Zugang & Hinweise','off'],['mail','E-Mail des Kunden','E-Mail des Kunden','email']];const gf=S.geoFill||{},gc=k=>gf[k]?' gf':'';
  const shown=F.filter(f=>X[f[0]]||a[f[0]]),hidden=F.filter(f=>!(X[f[0]]||a[f[0]]));
  return`<div class="modal"><div><h2 style="font-size:20px">Audit bearbeiten</h2><p class="sm" style="margin:0 0 10px">Wird mit dem Audit auf diesem Gerät gespeichert.</p>
- <label class="sm" for="an">Name des Objekts</label><input id="an" class="fi" value="${v(nmv)}" autocomplete="off"><label class="sm" for="a1" style="display:block;margin-top:8px">Strasse und Nummer</label>${geoSugBox()}<input id="a1" class="fi" value="${v(a.str)}" autocomplete="street-address">
- <div style="display:flex;gap:8px;margin-top:8px"><div style="width:90px"><label class="sm" for="a2">PLZ</label><input id="a2" class="fi" value="${v(a.plz)}" inputmode="numeric" autocomplete="postal-code"></div><div style="flex:1"><label class="sm" for="a3">Ort</label><input id="a3" class="fi" value="${v(a.ort)}" autocomplete="address-level2"></div></div>
+ <label class="sm" for="an">Name des Objekts</label><input id="an" class="fi" value="${v(nmv)}" autocomplete="off"><label class="sm" for="a1" style="display:block;margin-top:8px">Strasse und Nummer</label>${geoSugBox()}<input id="a1" class="fi${gc('a1')}" value="${v(a.str)}" autocomplete="street-address" autocapitalize="words">
+ <div style="display:flex;gap:8px;margin-top:8px"><div style="width:90px"><label class="sm" for="a2">PLZ</label><input id="a2" class="fi${gc('a2')}" value="${v(a.plz)}" inputmode="numeric" autocomplete="postal-code"></div><div style="flex:1"><label class="sm" for="a3">Ort</label><input id="a3" class="fi${gc('a3')}" value="${v(a.ort)}" autocomplete="address-level2" autocapitalize="words"></div></div>
+ <label class="sm" for="x_land" style="display:block;margin-top:8px">Land</label><input id="x_land" class="fi${gc('x_land')}" value="${v(a.land||landDef())}" list="landl" autocomplete="country-name" autocapitalize="words"><datalist id="landl">${LANDS.map(l=>`<option value="${l}">`).join('')}</datalist>
  ${shown.map(f=>`<label class="sm" for="x_${f[0]}" style="display:block;margin-top:8px">${f[1]}</label><input id="x_${f[0]}" class="fi" value="${v(a[f[0]])}" autocomplete="${f[3]}">`).join('')}
  ${hidden.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${hidden.map(f=>`<button class="chip" data-a="adrmore" data-v="${f[0]}">+ ${f[2]}</button>`).join('')}</div>`:''}
  <div class="act" style="margin-top:14px"><button id="adrsaveb" class="${S.adrDirty?'pri':'sec'}" data-a="adrok">Adresse speichern</button><button class="sec" data-a="adrno">Abbrechen</button></div></div></div>`;}
@@ -1247,17 +1248,71 @@ function geoExport(){const F=[];const T=S.cur.trk||[];if(T.length)F.push({type:'
  const N=S.obs.length;S.obs.forEach((o,i)=>{if(o.geo)F.push({type:'Feature',properties:{schritt:N-i,text:o.t||'',genauigkeit_m:o.geo.ac},geometry:{type:'Point',coordinates:[o.geo.lo,o.geo.la]}})});
  if(!F.length){toast('Noch keine Standortdaten vorhanden.');return}
  saveFile((S.cur.name||'Audit').replace(/[^\w\-äöüÄÖÜ ]+/g,'').trim()+' - Gelände.geojson',new Blob([JSON.stringify({type:'FeatureCollection',features:F},null,1)],{type:'application/geo+json'}))}
-/* Adressvorschlag aus dem Standort (OpenStreetMap, nur auf Anfrage beim Öffnen der Adresse) */
-async function geoAddr(){if(S.geoSug&&S.geoSug.busy)return;S.geoSug={busy:true};R();
- try{const g=await geoGet(60000);const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&lat=${g.la}&lon=${g.lo}&accept-language=${S.lang||'de'}`);const j=await r.json();const a=j.address||{};
-  const str=[a.road||a.pedestrian||a.footway||a.path||'',a.house_number||''].join(' ').trim();const sug={str,plz:a.postcode||'',ort:a.city||a.town||a.village||a.municipality||a.hamlet||'',land:a.country||'',ac:g.ac};
-  S.geoSug=sug.str||sug.ort?sug:{err:'Keine Adresse an diesem Standort gefunden.'}}catch(e){S.geoSug={err:e&&typeof e.code==='number'?geoMsg(e):'Standort gefunden, aber die Adresse konnte nicht abgefragt werden. Internetverbindung prüfen und nochmals versuchen.'}}if(S.adrForm)R()}
-function geoSugBox(){if(!navigator.geolocation)return'';const g=S.geoSug;
- if(!g)return`<button class="chip" data-a="geoaddr" style="margin:2px 0 10px">📍 Adresse vom aktuellen Standort vorschlagen</button>`;
- if(g.busy)return`<p class="sm" style="margin:2px 0 10px">📍 Standort wird ermittelt …</p>`;
+/* V128: Adresse aus dem Standort (OpenStreetMap). Bevorzugt der Aufnahmeort der Schritte, sonst der aktuelle Standort.
+   Leere Felder werden ergänzt und markiert, abweichende Eingaben nur als Vorschlag gezeigt – nie still überschrieben. */
+const LANDS=['Deutschland','Schweiz','Österreich','Liechtenstein','Frankreich','Italien','Niederlande','Belgien','Luxemburg','Dänemark','Polen','Tschechien','Spanien','Portugal','Vereinigtes Königreich','Schweden','Norwegen','Ungarn','Kroatien','Slowenien'];
+const LCC={deutschland:'de',germany:'de',de:'de',schweiz:'ch',switzerland:'ch',suisse:'ch',svizzera:'ch',ch:'ch',österreich:'at',austria:'at',autriche:'at',at:'at',liechtenstein:'li',frankreich:'fr',france:'fr',italien:'it',italy:'it',italie:'it',niederlande:'nl',belgien:'be',luxemburg:'lu',dänemark:'dk',polen:'pl',tschechien:'cz',spanien:'es',portugal:'pt',vereinigteskönigreich:'gb',schweden:'se',norwegen:'no',ungarn:'hu',kroatien:'hr',slowenien:'si'};
+const GEOC={};const gnorm=t=>String(t||'').toLowerCase().replace(/str\.?(?=\s|$)/g,'straße').replace(/strasse/g,'straße').replace(/[^a-z0-9äöüßéèàç]/g,'');
+const lcc=t=>LCC[gnorm(t)]||'';
+function landDef(){try{const L=(S.audits||[]).filter(x=>x&&x.id!==S.aid&&x.addr&&x.addr.land).sort((a,b)=>(b.upd||0)-(a.upd||0));if(L.length)return L[0].addr.land}catch(e){}
+ try{const r=((navigator.languages||[]).find(l=>/-[a-z]{2}$/i.test(l))||navigator.language||'').split('-')[1];if(r&&r.length===2)return new Intl.DisplayNames([S.lang||'de'],{type:'region'}).of(r.toUpperCase())}catch(e){}return''}
+function geoSite(){let b=null;S.obs.forEach(o=>{if(o.geo&&(!b||o.geo.ac<b.ac))b=o.geo});const T=S.cur.trk||[];if(!b&&T.length)b=T[0];return b?{la:b.la,lo:b.lo,ac:b.ac||30,src:'site'}:null}
+const roadOf=t=>String(t||'').replace(/\s*\d+\s*[a-z]?(\s*[-\/]\s*\d+\s*[a-z]?)?\s*$/i,'').trim();
+const noOf=t=>{const m=String(t||'').match(/\s(\d+\s*[a-z]?(\s*[-\/]\s*\d+\s*[a-z]?)?)\s*$/i);return m?m[1].trim():''};
+const adrVal=(id,k)=>{const e=document.getElementById(id);return e?e.value.trim():String((S.addr&&S.addr[k])||'').trim()};
+const landIsDef=()=>!(S.addr&&S.addr.land)&&adrVal('x_land','land')===landDef();
+async function geoAddr(auto){if(S.geoSug&&S.geoSug.busy)return;S.geoSug={busy:true,auto};if(S.adrForm)R();
+ try{let g=auto?geoSite():null;if(!g){const q=await geoGet(60000);g={la:q.la,lo:q.lo,ac:q.ac,src:'now'}}
+  const k=(+g.la).toFixed(4)+','+(+g.lo).toFixed(4)+','+(S.lang||'de');let j=GEOC[k];
+  if(!j){const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&lat=${g.la}&lon=${g.lo}&accept-language=${S.lang||'de'}`);j=await r.json();GEOC[k]=j}
+  const a=j.address||{};const road=a.road||a.pedestrian||a.footway||a.path||a.residential||a.square||'';
+  const sug={road,no:a.house_number||'',str:[road,a.house_number||''].join(' ').trim(),plz:a.postcode||'',ort:a.city||a.town||a.village||a.municipality||a.hamlet||'',land:a.country||'',ac:g.ac,src:g.src};
+  sug.lv=g.ac<=150?3:g.ac<=3000?2:1;
+  if(!(sug.road||sug.ort||sug.land))S.geoSug=auto?null:{err:'Keine Adresse an diesem Standort gefunden.'};else{S.geoSug=sug;if(S.adrForm)geoFill(sug)}}
+ catch(e){S.geoSug=auto?null:{err:e&&typeof e.code==='number'?geoMsg(e):'Standort gefunden, aber die Adresse konnte nicht abgefragt werden. Internetverbindung prüfen und nochmals versuchen.'}}
+ if(S.adrForm)R()}
+function geoSet(id,val){const e=document.getElementById(id);if(!e||!val||e.value.trim()===val)return false;e.value=val;e.dispatchEvent(new Event('input',{bubbles:true}));S.geoFill={...(S.geoFill||{}),[id]:1};return true}
+function geoFill(g){const ld=landIsDef();const F=[['a1',g.lv>=3&&g.road?g.str:''],['a2',g.lv>=2?g.plz:''],['a3',g.lv>=2?g.ort:''],['x_land',g.land]];const n=[];
+ F.forEach(([id,val])=>{const e=document.getElementById(id);if(!e||!val)return;if(e.value.trim()&&!(id==='x_land'&&ld))return;if(geoSet(id,val))n.push(id)});g.filled=n}
+function geoDiff(g){if(!g||g.busy||g.err||g.keep)return null;const d=[];
+ const st=adrVal('a1','str');if(g.lv>=3&&g.road&&st&&gnorm(roadOf(st))!==gnorm(g.road))d.push('Strasse');
+ const pz=adrVal('a2','plz');if(g.lv>=2&&g.plz&&pz&&gnorm(pz)!==gnorm(g.plz))d.push('PLZ');
+ const ot=adrVal('a3','ort'),A=gnorm(ot),B=gnorm(g.ort);if(g.lv>=2&&B&&A&&A.indexOf(B)<0&&B.indexOf(A)<0)d.push('Ort');
+ const la=adrVal('x_land','land');if(g.land&&la&&gnorm(la)!==gnorm(g.land)&&!(lcc(la)&&lcc(la)===lcc(g.land)))d.push('Land');
+ if(!d.length)return null;const no=noOf(st)||g.no;
+ const p={str:d.includes('Strasse')?[g.road,no].join(' ').trim():st,plz:d.includes('PLZ')?g.plz:pz,ort:d.includes('Ort')?g.ort:ot,land:d.includes('Land')?g.land:la};return{d,p}}
+const geoAcc=ac=>ac>=1000?(ac/1000).toFixed(1)+' km':ac+' m';
+const GFN={a1:'Strasse',a2:'PLZ',a3:'Ort',x_land:'Land'};
+function geoSugBox(){const g=S.geoSug,manual=navigator.geolocation?`<button class="chip" data-a="geoaddr" style="margin:2px 0 10px">📍 Adresse vom aktuellen Standort vorschlagen</button>`:'';
+ if(!g)return manual;
+ if(g.busy)return`<p class="sm" style="margin:2px 0 10px">📍 ${g.auto&&geoSite()?'Adresse zum Aufnahmeort wird gesucht …':'Standort wird ermittelt …'}</p>`;
  if(g.err)return`<p class="sm" style="margin:2px 0 10px">📍 ${esc(g.err)} <button class="lnk" data-a="geoaddr" style="font-size:13px">Nochmals</button></p>`;
- return`<div class="ob" style="margin:2px 0 10px;padding:10px 12px;background:var(--acb);border-color:var(--ac)"><div class="sm">📍 Vorschlag vom Standort (± ${g.ac>=1000?(g.ac/1000).toFixed(1)+' km':g.ac+' m'})${g.ac>=800?' – ungenau, bitte prüfen. Für genaue Adressen «Genauer Standort» erlauben.':''}</div><b data-nt>${esc([g.str,[g.plz,g.ort].filter(Boolean).join(' ')].filter(Boolean).join(', '))}</b><div style="margin-top:6px"><button class="pri" data-a="geouse" style="padding:6px 14px">Übernehmen</button></div></div>`}
-function add(o){if(!o.uid)o.uid=Date.now().toString(36)+Math.random().toString(36).slice(2,6);S.obs.unshift(o);geoTag(o);if(o.room)S.room=o.room;}
+ const from=g.src==='site'?'vom Aufnahmeort':'vom Standort',fl=Object.keys(S.geoFill||{}).map(k=>GFN[k]).filter(Boolean),df=geoDiff(g);let h='';
+ if(fl.length)h+=`<div class="sm" style="margin:2px 0 6px">📍 <b>Ergänzt ${from}</b> (± ${geoAcc(g.ac)}): ${fl.join(', ')}. ${S.geoFill.a1?'Bitte prüfen, besonders die Hausnummer. ':'Bitte prüfen. '}<button class="lnk" data-a="geoundo" style="font-size:13px">Rückgängig</button></div>`;
+ if(g.lv<3&&!df)h+=`<div class="sm" style="margin:2px 0 6px">📍 Strasse nicht ergänzt: Standort zu ungenau (± ${geoAcc(g.ac)}).${g.src==='now'?' Für genaue Adressen «Genauer Standort» erlauben.':''}</div>`;
+ if(df)h+=`<div class="ob" style="margin:2px 0 10px;padding:10px 12px;background:var(--acb);border-color:var(--ac)"><div class="sm">📍 ${g.src==='site'?'Am Aufnahmeort gefunden':'Am aktuellen Standort gefunden'} (± ${geoAcc(g.ac)}) · abweichend: ${df.d.join(', ')}</div><b data-nt>${esc([df.p.str,[df.p.plz,df.p.ort].filter(Boolean).join(' '),df.p.land].filter(Boolean).join(', '))}</b><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button class="pri" data-a="geouse" style="padding:6px 14px">Übernehmen</button><button class="sec" data-a="geokeep" style="padding:6px 14px">Meine Eingabe behalten</button></div></div>`;
+ else if(!fl.length&&g.lv>=3)h+=`<div class="sm" style="margin:2px 0 10px">📍 Adresse passt zum ${g.src==='site'?'Aufnahmeort':'Standort'} (± ${geoAcc(g.ac)}).</div>`;
+ return h||manual}
+/* V128: Beim Öffnen automatisch ergänzen – nur ohne Rückfrage-Dialog und nur, wenn der Standort zum Audit gehört */
+function adrOpen(focus){S.adrForm=true;S.adrX=null;S.adrNm=undefined;S.geoSug=null;S.geoFill=null;S.adrFocus=focus||'a1';
+ const ad=S.addr||{},need=!ad.str||!ad.plz||!ad.ort||!ad.land,fresh=S.liveAid===S.aid||!curRec();
+ if(geoSite()){setTimeout(()=>{if(S.adrForm&&!S.geoSug)geoAddr(true)},60);return}
+ if(!need||!fresh||!navigator.geolocation)return;
+ const go=()=>{if(S.adrForm&&!S.geoSug)geoAddr(true)};
+ if(/AuditAppAndroid/.test(navigator.userAgent)||(GEO.last&&Date.now()-GEO.last.t<300000)){setTimeout(go,60);return}
+ geoPerm().then(st=>{if(st==='granted')go()})}
+/* V128: PLZ eingegeben → Ort (und Land) ergänzen, nur wenn diese Felder leer sind */
+let plzLast='';
+async function plzLookup(z){z=String(z||'').trim();if(!/^\d{4,5}$/.test(z)||z===plzLast||!S.on)return;const o=document.getElementById('a3');if(!o||o.value.trim())return;plzLast=z;
+ const cc=lcc(adrVal('x_land','land'));
+ try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&postalcode=${z}${cc?'&countrycodes='+cc:''}&accept-language=${S.lang||'de'}`);const j=await r.json();const x=j&&j[0];if(!x)return;
+  const a=x.address||{};let ort=a.city||a.town||a.village||a.municipality||'';if(!ort)ort=(String(x.display_name||'').split(',').map(t=>t.trim()).filter(t=>t&&t!==z)[0])||'';
+  if(!S.adrForm||adrVal('a2','plz')!==z)return;const e=document.getElementById('a3');if(!e||e.value.trim()||!ort)return;geoSet('a3',ort);
+  if(a.country&&(!adrVal('x_land','land')||landIsDef()))geoSet('x_land',a.country);
+  if(!S.geoSug)S.geoSug={src:'plz',lv:0,keep:true,ac:0};R();toast('Ort zur PLZ ergänzt: '+ort+'. Bitte prüfen.')}catch(e){plzLast=''}}
+addEventListener('change',e=>{if(e.target&&e.target.id==='a2'&&S.adrForm)plzLookup(e.target.value)});
+addEventListener('input',e=>{if(e.target&&e.target.id==='a2'&&S.adrForm&&/^\d{5}$/.test(e.target.value.trim()))plzLookup(e.target.value)});
+function add(o){if(!S.obs.length)S.liveAid=S.aid;if(!o.uid)o.uid=Date.now().toString(36)+Math.random().toString(36).slice(2,6);S.obs.unshift(o);geoTag(o);if(o.room)S.room=o.room;}
 
 /* ===== Sprachen: de ist Quelle. en/fr sind eingebaut, weitere Pakete würden bei Bedarf geladen und lokal gespeichert. ===== */
 const LANGS=[['de','Deutsch'],['en','English'],['fr','Français']];
@@ -1395,6 +1450,7 @@ function dlModal(){const d=S.dl;if(!d)return'';const sr=d.kind==='sr',mb=sr?75:0
  add.en["Zuletzt bearbeitet"]="Last edited";add.fr["Zuletzt bearbeitet"]="Dernière modification";add.en["Weitere Audits"]="Other audits";add.fr["Weitere Audits"]="Autres audits";add.en["Weiter bearbeiten ›"]="Continue ›";add.fr["Weiter bearbeiten ›"]="Continuer ›";add.en["Ansehen ›"]="View ›";add.fr["Ansehen ›"]="Voir ›";add.en["Neues Audit starten"]="Start new audit";add.fr["Neues Audit starten"]="Démarrer un nouvel audit";
  add.en["Audit löschen"]="Delete audit";add.fr["Audit löschen"]="Supprimer l’audit";add.en["Audit löschen?"]="Delete audit?";add.fr["Audit löschen?"]="Supprimer l’audit ?";add.en["Doppelte Kopie entfernen?"]="Remove duplicate copy?";add.fr["Doppelte Kopie entfernen?"]="Supprimer la copie en double ?";add.en["Kopie entfernen"]="Remove copy";add.fr["Kopie entfernen"]="Supprimer la copie";add.en["Endgültig löschen"]="Delete permanently";add.fr["Endgültig löschen"]="Supprimer définitivement";add.en["Abbrechen"]="Cancel";add.fr["Abbrechen"]="Annuler";add.en["Doppelt vorhanden"]="Duplicate";add.fr["Doppelt vorhanden"]="En double";add.en["Texte, Fotos und Tonaufnahmen dieses Audits werden von diesem Gerät entfernt."]="Texts, photos and recordings of this audit will be removed from this device.";add.fr["Texte, Fotos und Tonaufnahmen dieses Audits werden von diesem Gerät entfernt."]="Textes, photos et enregistrements de cet audit seront supprimés de cet appareil.";add.en["Das Audit ist zweimal mit identischem Inhalt vorhanden. Entfernt wird nur die Kopie, das Original bleibt."]="This audit exists twice with identical content. Only the copy is removed; the original stays.";add.fr["Das Audit ist zweimal mit identischem Inhalt vorhanden. Entfernt wird nur die Kopie, das Original bleibt."]="Cet audit existe deux fois avec un contenu identique. Seule la copie est supprimée, l’original reste.";
  add.en["Vorschlag: Schritt entfernen?"]="Suggestion: remove step?";add.fr["Vorschlag: Schritt entfernen?"]="Suggestion : supprimer l’étape ?";add.en["Entfernen"]="Remove";add.fr["Entfernen"]="Supprimer";add.en["Behalten"]="Keep";add.fr["Behalten"]="Garder";add.en["Schritt entfernt."]="Step removed.";add.fr["Schritt entfernt."]="Étape supprimée.";add.en["Kein Bezug zum Audit erkannt."]="No relevance to the audit detected.";add.fr["Kein Bezug zum Audit erkannt."]="Aucun lien avec l’audit détecté.";
+ add.en["Meine Eingabe behalten"]="Keep my entry";add.fr["Meine Eingabe behalten"]="Garder ma saisie";add.en["Ergänzung entfernt."]="Addition removed.";add.fr["Ergänzung entfernt."]="Ajout supprimé.";add.en["Vorschlag übernommen. Bitte prüfen und speichern."]="Suggestion applied. Please check and save.";add.fr["Vorschlag übernommen. Bitte prüfen und speichern."]="Suggestion reprise. Merci de vérifier et d’enregistrer.";add.en["Adresse zum Aufnahmeort wird gesucht …"]="Looking up the address of the recording location …";add.fr["Adresse zum Aufnahmeort wird gesucht …"]="Recherche de l’adresse du lieu d’enregistrement …";add.en["Standort wird ermittelt …"]="Determining location …";add.fr["Standort wird ermittelt …"]="Localisation en cours …";
  add.en['Die Audioaufnahme ist nach dem Neuladen nicht mehr vorhanden (Prototyp).']='The audio recording is no longer available after reloading (prototype).';add.fr['Die Audioaufnahme ist nach dem Neuladen nicht mehr vorhanden (Prototyp).']='L’enregistrement audio n’est plus disponible après le rechargement (prototype).';
  Object.assign(add.en,{'Offline-Spracherkennung geladen':'Offline speech recognition downloaded','Simulation: In der echten App wäre die Spracherkennung jetzt offline verfügbar.':'Simulation: in the real app, speech recognition would now be available offline.','Simulation: Das Sprachpaket gilt jetzt als geladen und steht in der Liste. Im Prototyp gibt es dafür keine Texte, deshalb bleibt die App in der aktuellen Sprache.':'Simulation: the language pack now counts as downloaded and appears in the list. The prototype has no texts for it, so the app stays in the current language.','geladen (Simulation)':'downloaded (simulation)','Im Prototyp gibt es für diese Sprache keine Texte. Die App bleibt in der aktuellen Sprache.':'The prototype has no texts for this language. The app stays in the current language.'});
  Object.assign(add.fr,{'Offline-Spracherkennung geladen':'Reconnaissance vocale hors ligne téléchargée','Simulation: In der echten App wäre die Spracherkennung jetzt offline verfügbar.':'Simulation : dans la vraie application, la reconnaissance vocale serait maintenant disponible hors ligne.','Simulation: Das Sprachpaket gilt jetzt als geladen und steht in der Liste. Im Prototyp gibt es dafür keine Texte, deshalb bleibt die App in der aktuellen Sprache.':'Simulation : le paquet de langue est maintenant considéré comme téléchargé et figure dans la liste. Le prototype n’a pas de textes pour lui, l’application reste donc dans la langue actuelle.','geladen (Simulation)':'téléchargé (simulation)','Im Prototyp gibt es für diese Sprache keine Texte. Die App bleibt in der aktuellen Sprache.':'Le prototype n’a pas de textes pour cette langue. L’application reste dans la langue actuelle.'});
@@ -1460,7 +1516,7 @@ document.addEventListener('click',e=>{
  const prevSc=S.sc;
  if(a==='area'){if(v.startsWith('Bau'))S.sc='sub';else{S.prof=v.replace(/&amp;/g,'&');S.pf=[];S.sc=nextSc();setTimeout(wzOffer,400);}}
  else if(a==='more')S.sc='search';
- else if(a==='hnew'){const lp=lastProf(),f=document.getElementById('fg');const fv=f?f.value.trim():null;if(curRec())startNew();S.prof=fv!=null?(fv||'Allgemein'):((lp&&lp.p)||'Allgemein');S.pf=lp&&lp.p===S.prof?lp.pf||[]:[];S.pickProf=false;S.sc=nextSc();setTimeout(wzOffer,400)}
+ else if(a==='hnew'){const lp=lastProf(),f=document.getElementById('fg');const fv=f?f.value.trim():null;if(curRec())startNew();S.liveAid=S.aid;S.prof=fv!=null?(fv||'Allgemein'):((lp&&lp.p)||'Allgemein');S.pf=lp&&lp.p===S.prof?lp.pf||[]:[];S.pickProf=false;S.sc=nextSc();setTimeout(wzOffer,400)}
  else if(a==='fgsave'){const f=document.getElementById('cfg_fg');const v=f?f.value.trim():'';const lp=lastProf();try{localStorage.setItem('aa_prof',JSON.stringify({p:v||'Allgemein',pf:lp&&lp.p===v?lp.pf||[]:[]}))}catch(e){}toast(v?'Fachgebiet gespeichert.':'Fachgebiet entfernt.');(S.acc=S.acc||{}).fg=false}
  else if(a==='hued'){setHue(HUE0,true)}
  else if(a==='hprof')S.pickProf=true;
@@ -1498,7 +1554,9 @@ document.addEventListener('click',e=>{
  else if(a==='cfxauto'){let o={};try{o=JSON.parse(localStorage.getItem('aa_cfx')||'{}')}catch(e){}delete o[baseCur()];try{localStorage.setItem('aa_cfx',JSON.stringify(o))}catch(e){}fxRefresh(true).then(()=>R());toast('Automatischer Kurs wird verwendet.')}
  else if(a==='cfxsave'){const f=document.getElementById('cfx');const n=parseFloat(String(f&&f.value||'').replace(',','.'));if(!f||!f.value.trim()){let o={};try{o=JSON.parse(localStorage.getItem('aa_cfx')||'{}')}catch(e){}delete o[baseCur()];try{localStorage.setItem('aa_cfx',JSON.stringify(o))}catch(e){}toast('Automatischer Kurs wird verwendet.')}else if(n>0){let o={};try{o=JSON.parse(localStorage.getItem('aa_cfx')||'{}')}catch(e){}o[baseCur()]=n;try{localStorage.setItem('aa_cfx',JSON.stringify(o))}catch(e){}toast('Umrechnung übernommen.')}else toast('Bitte einen Kurs wie 0.80 eintragen.')}
  else if(a==='geoaddr'){geoAddr();return}
- else if(a==='geouse'){const g=S.geoSug||{};const set=(id,val)=>{const e=document.getElementById(id);if(e&&val){e.value=val;e.dispatchEvent(new Event('input',{bubbles:true}))}};set('a1',g.str);set('a2',g.plz);set('a3',g.ort);if(g.land){S.adrX=S.adrX||{};}S.geoSug=null;const b=document.getElementById('adrsaveb');if(b)b.className='pri';S.adrDirty=true;toast('Adresse übernommen. Bitte prüfen und speichern.');const box=document.querySelector('[data-a=geouse]');if(box)box.closest('.ob').remove();return}
+ else if(a==='geouse'){const g=S.geoSug||{};const df=geoDiff(g);if(df){if(df.d.includes('Strasse'))geoSet('a1',df.p.str);if(df.d.includes('PLZ'))geoSet('a2',df.p.plz);if(df.d.includes('Ort'))geoSet('a3',df.p.ort);if(df.d.includes('Land'))geoSet('x_land',df.p.land)}g.keep=true;S.adrDirty=true;toast('Vorschlag übernommen. Bitte prüfen und speichern.');}
+ else if(a==='geokeep'){if(S.geoSug)S.geoSug.keep=true;}
+ else if(a==='geoundo'){Object.keys(S.geoFill||{}).forEach(id=>{const e=document.getElementById(id);if(e){e.value=id==='x_land'&&!(S.addr&&S.addr.land)?landDef():String((S.addr&&S.addr[{a1:'str',a2:'plz',a3:'ort',x_land:'land'}[id]])||'');e.dispatchEvent(new Event('input',{bubbles:true}))}});S.geoFill=null;if(S.geoSug)S.geoSug.keep=true;plzLast='';toast('Ergänzung entfernt.');}
  else if(a==='trk'){S.geoErr=null;if(S.trkOn)trkStop();else trkStart();return}
  else if(a==='geoerrx')S.geoErr=null;
  else if(a==='geomap'){S.geoMap=true;R();setTimeout(geoMapDraw,60);return}
@@ -1618,7 +1676,7 @@ document.addEventListener('click',e=>{
  else if(a==='txno')S.txt=false;
  else if(a==='txok'){const v=document.getElementById('ta').value.trim();S.txt=false;if(v){const o={k:'t',t:v};add(o);
    procText(o);}}
- else if(a==='adr'){S.adrForm=true;S.adrX=null;S.adrNm=undefined;S.geoSug=null;if(!(S.addr&&S.addr.str))geoPerm().then(st=>{if(st==='granted'&&S.adrForm&&!S.geoSug)geoAddr()});S.adrFocus=v==='name'?'an':'a1';}
+ else if(a==='adr'){adrOpen(v==='name'?'an':'a1');}
  else if(a==='sw')S.sw=true;
  else if(a==='swc'||a==='swx')S.sw=false;
  else if(a==='swpick'){archive();const t=S.audits.find(x=>x.id==v);if(t)load(t);else toast('Dieses Audit wurde nicht gefunden.')}
@@ -1635,7 +1693,7 @@ document.addEventListener('click',e=>{
  else if(a==='ex'){S.ex=S.ex==v?null:+v;}
  else if(a==='finedit'){const [i,pid]=String(v).split('|');S.oeBack=S.sc;S.oePt=pid||null;S.sc='walk';openOe(+i);return}
  else if(a==='oeptok'){const p=S.pts.find(x=>x.id==S.oePt);if(p){p.st='done';p.note='Im Schritt geklärt'}S.oePt=null;toast('Punkt als geklärt markiert.')}
- else if(a==='act'){const[id,l]=v.split('|');if(l==='Später')return setLater(id);if(l==='Adresse eingeben'){S.adrForm=true;S.adrFocus='a1';R();return}const p=S.pts.find(x=>x.id==id);p.st='done';p.note='Deine Entscheidung: '+l;S.tab='open';}
+ else if(a==='act'){const[id,l]=v.split('|');if(l==='Später')return setLater(id);if(l==='Adresse eingeben'){adrOpen('a1');R();return}const p=S.pts.find(x=>x.id==id);p.st='done';p.note='Deine Entscheidung: '+l;S.tab='open';}
  else if(a==='reopen'){S.pts.find(x=>x.id==v).st='open';}
  else if(a==='undo'&&S.lastHints){S.lastHints.forEach(([i,H])=>{if(S.obs[i])S.obs[i].hints=H});S.lastHints=null;S.toast=null;}
  else if(a==='undo'&&S.lastObs){S.obs.splice(S.lastObs.i,0,S.lastObs.x);S.lastObs=null;S.toast=null;}
