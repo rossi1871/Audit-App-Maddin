@@ -90,7 +90,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .mby{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--mu);font-size:13px;padding:2px 0 6px}.mby b{color:var(--ink);font-weight:700;letter-spacing:.02em}.mbm{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,hsl(var(--hue) 85% 55%),hsl(calc(var(--hue) + 40) 85% 42%));box-shadow:0 2px 10px var(--glow)}
 .hst{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:10px}.hst li{display:flex;gap:12px;align-items:flex-start}.hst i{font-style:normal;flex:none;width:28px;height:28px;border-radius:50%;background:var(--acb);color:var(--ac);display:grid;place-items:center;font-weight:700;font-size:14px;border:1px solid var(--ac)}
 .tbi{flex:none;width:40px;height:40px;border-radius:12px;background:var(--sf2);border:1px solid var(--ln);display:grid;place-items:center;color:var(--ac)}.tbi svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.fgs{margin-top:4px;border:1px solid var(--ln);border-radius:12px;background:var(--sf);overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35)}.fgs button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--ln);padding:11px 14px;color:var(--ink);font-size:15px;cursor:pointer}.fgs button:first-child{border-top:0}.fgs button:active{background:var(--acb)}
+.fgs{margin-top:4px;border:1px solid var(--ln);border-radius:12px;background:var(--sf);overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}.fgs button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--ln);padding:11px 14px;color:var(--ink);font-size:15px;cursor:pointer}.fgs button:first-child{border-top:0}.fgs button:active{background:var(--acb)}
 .kick{margin:0 0 10px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;font-size:12px;color:var(--ac)}
 .sep.sl{margin:16px 0 18px;background:var(--ln)}
 .sep.sd i{width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:1px;transform:rotate(45deg)}
@@ -138,7 +138,7 @@ body{background:radial-gradient(900px 520px at 10% -10%,hsl(var(--hue) 95% 50% /
 .hwk{position:absolute;inset:0;pointer-events:none}.hwk i{position:absolute;left:50%;top:4px;width:28px;height:28px;margin-left:-14px;border-radius:50%;border:3px solid #fff;background:hsl(var(--hue) 85% 55%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 10px rgba(0,0,0,.45)}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>
-const VER=135;
+const VER=136;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -1118,12 +1118,22 @@ function fgList(id){return`<div class="fgs" id="${id}" hidden></div>`}
 /* V100: eigene Vorschlagsliste fürs Fachgebiet (die eingebaute Browser-Liste fehlt in manchen Browsern und in der Android-App) */
 function fgFind(q){q=(q||'').trim().toLowerCase();if(!q)return[];const R=[];FIELDS.forEach(([l,sy])=>{const n=l.toLowerCase(),al=String(sy||'').split('|');let sc=n.startsWith(q)?0:n.split(/[ \/-]+/).some(w=>w.startsWith(q))?1:al.some(a=>a.startsWith(q))?2:(n.includes(q)||al.some(a=>a.includes(q)))?3:9;if(sc<9)R.push([sc,l])});return R.sort((a,b)=>a[0]-b[0]||a[1].localeCompare(b[1])).slice(0,6).map(x=>x[1])}
 function fgShow(inp,all){const box=inp&&inp.parentNode&&inp.parentNode.querySelector('.fgs');if(!box)return;const L=all?FIELDS.map(f=>f[0]).sort((a,b)=>a.localeCompare(b,'de')):fgFind(inp.value);if(!L.length||L.length===1&&L[0].toLowerCase()===inp.value.trim().toLowerCase()){box.hidden=true;box.innerHTML='';return}
- box.innerHTML=L.map(l=>`<button type="button" data-fgv="${esc(l)}">${esc(l)}</button>`).join('');box.style.maxHeight=all?'280px':'';box.style.overflowY=all?'auto':'';box.hidden=false}
+ box.innerHTML=L.map(l=>`<button type="button" data-fgv="${esc(l)}">${esc(l)}</button>`).join('');box.style.maxHeight=all?'min(55vh,360px)':'';box.style.overflowY=all?'auto':'';box.hidden=false;if(all)setTimeout(()=>{try{box.scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}},60)}
 addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.fg)fgShow(e.target)});
 addEventListener('focusin',e=>{if(e.target&&e.target.dataset&&e.target.dataset.fg&&e.target.value)fgShow(e.target)});
 addEventListener('pointerdown',e=>{const c=e.target&&e.target.closest&&e.target.closest('.fgc');if(c){e.preventDefault();const inp=c.parentNode.querySelector('[data-fg]'),box=c.parentNode.querySelector('.fgs');if(box&&!box.hidden){box.hidden=true}else fgShow(inp,true);return}
- const b=e.target&&e.target.closest&&e.target.closest('[data-fgv]');if(b){e.preventDefault();const box=b.parentNode,inp=box.parentNode.querySelector('[data-fg]');if(inp){inp.value=b.dataset.fgv;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))}box.hidden=true;box.innerHTML='';return}
+ /* V136: Antippen wählt erst beim Loslassen, damit die Liste gewischt werden kann */
+ const b=e.target&&e.target.closest&&e.target.closest('[data-fgv]');if(b){FGT={b,x:e.clientX,y:e.clientY,mv:false};return}
  if(!(e.target&&e.target.closest&&e.target.closest('[data-fg],.fgs')))document.querySelectorAll('.fgs').forEach(x=>{x.hidden=true})},true);
+let FGT=null;
+function fgKbd(){const a=document.activeElement;if(a&&a.dataset&&a.dataset.fg)a.blur()}
+function fgPick(b){const box=b.parentNode,inp=box.parentNode.querySelector('[data-fg]');if(inp){inp.value=b.dataset.fgv;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))}box.hidden=true;box.innerHTML=''}
+addEventListener('pointermove',e=>{if(FGT&&!FGT.mv&&(Math.abs(e.clientY-FGT.y)>8||Math.abs(e.clientX-FGT.x)>8)){FGT.mv=true;fgKbd()}},true);
+addEventListener('pointercancel',()=>{if(FGT){FGT.mv=true;fgKbd()}},true);
+addEventListener('pointerup',e=>{const t=FGT;FGT=null;if(!t||t.mv)return;const b=e.target&&e.target.closest&&e.target.closest('[data-fgv]');if(b!==t.b)return;e.preventDefault();fgPick(b)},true);
+/* Beim Wischen durch die Liste klappt die Tastatur ein; Antippen des Felds öffnet sie wieder */
+addEventListener('scroll',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('fgs')){if(FGT)FGT.mv=true;fgKbd()}},true);
+addEventListener('touchmove',e=>{if(e.target&&e.target.closest&&e.target.closest('.fgs'))fgKbd()},{passive:true,capture:true});
 function res(q0){const t=q0.trim();const q=norm(t);if(!q)return'';
  const hit=x=>{const n=norm(x);return n.startsWith(q)||n.split(/[\s\/\-]+/).some(w=>w.startsWith(q))||(q.length>=4&&n.includes(q))};
  const m=FIELDS.map(([l,sy])=>{const lm=hit(l);const via=lm?null:sy.split('|').find(hit);return(lm||via)?[l,via]:null}).filter(Boolean);
