@@ -157,6 +157,9 @@ jobs:
             fwrite(STDERR, count($codes)." Tester-Codes\n");'
           # Kleinschreibung /audit.beta leitet auf /audit.Beta weiter (Code im Link bleibt erhalten)
           mkdir -p beta-lc
+          # Fehlerverzeihend: /audit.Beta/Name=CODE*100 oder /audit.Beta/CODE leitet auf /audit.Beta/?code=CODE weiter
+          printf '%s\n' 'RewriteEngine On' 'RewriteCond %{REQUEST_FILENAME} !-f' 'RewriteCond %{REQUEST_FILENAME} !-d' 'RewriteRule ^(?:[^=/]*=)?([A-Za-z0-9_-]+)(?:[*:][0-9]+)?/?$ /audit.Beta/?code=$1 [R=302,L,NE]' > beta/.htaccess
+          cp beta/.htaccess beta-lc/.htaccess
           printf '%s\n' '<?php' '$q = $_SERVER["QUERY_STRING"] ?? "";' 'header("Location: /audit.Beta/" . ($q !== "" ? "?" . $q : ""), true, 301);' > beta-lc/index.php
           lftp -e "set sftp:auto-confirm yes; set net:max-retries 3; set net:timeout 30; \
             mkdir -p -f audit.Beta; mirror -R --no-perms beta/ audit.Beta/; mkdir -p -f audit.beta; mirror -R --no-perms beta-lc/ audit.beta/; bye" \
@@ -164,6 +167,7 @@ jobs:
           rm -f beta/api/_data/beta_secrets.php
           sleep 2
           curl -sS -m 20 -o /dev/null -w "beta: %{http_code}\n" "https://go-range.de/audit.Beta/"
+          curl -sS -m 20 -o /dev/null -w "beta Zeile statt Code (soll 302): %{http_code} -> %{redirect_url}\n" "https://go-range.de/audit.Beta/Test=ABC-123*100"
           curl -sS -m 20 -o /dev/null -w "beta klein (soll 301): %{http_code} -> %{redirect_url}\n" "https://go-range.de/audit.beta/?code=test"
           curl -sS -m 20 -o /dev/null -w "beta-ki ohne Code (soll 401): %{http_code}\n" "https://go-range.de/audit.Beta/api/ki.php?t=check"
           curl -sS -m 20 -o /dev/null -w "beta-secrets (soll 403): %{http_code}\n" "https://go-range.de/audit.Beta/api/_data/beta_secrets.php"
