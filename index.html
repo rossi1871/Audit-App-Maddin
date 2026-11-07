@@ -155,6 +155,17 @@ button,.chip,.lnk,.lg,.li,.cb,.cbw{touch-action:manipulation;-webkit-user-select
  [data-a=cedit]{padding:8px 0;display:inline-block}
  .hd [data-a=adr]{padding:4px 0 10px!important;margin:0 0 -10px}
 }
+
+/* V153: Queransicht (Handy quer): ganze Seite scrollt, breiter, Kopf kompakt, Leiste unten bleibt sichtbar */
+@media (orientation:landscape) and (max-height:540px){
+ .ph{height:auto!important;min-height:100dvh!important;max-width:min(100%,980px)!important;overflow:visible!important;border-radius:0!important;border:0!important}
+ .bd{overflow:visible!important;flex:none!important}
+ .hd{padding-top:8px!important;padding-bottom:8px!important;padding-left:max(18px,env(safe-area-inset-left))!important}
+ .bd{padding-left:max(18px,env(safe-area-inset-left))!important;padding-right:max(18px,env(safe-area-inset-right))!important}
+ .cnt{position:sticky;bottom:0;z-index:5;background:var(--sf);padding-top:6px!important;padding-bottom:calc(6px + env(safe-area-inset-bottom))!important;padding-left:max(14px,env(safe-area-inset-left))!important;padding-right:max(14px,env(safe-area-inset-right))!important}
+ .cnt .n{padding:6px 10px}
+ #side{display:none!important}
+}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>/* V145: Umzug auf go-range.de/audit, Versions-Vorschau, Zugriffsstatistik */
 (function(){
@@ -279,7 +290,7 @@ addEventListener('load',()=>{if(!mh&&!isOld)setTimeout(hit,1500)});
 })();
 </script>
 <script>
-const VER=152;
+const VER=153;
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
