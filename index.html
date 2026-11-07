@@ -290,7 +290,14 @@ addEventListener('load',()=>{if(!mh&&!isOld)setTimeout(hit,1500)});
 })();
 </script>
 <script>
-const VER=153;
+const VER=154;
+/* V154: Beta-Version (go-range.de/audit.Beta) – KI inklusive über den eigenen Server, Schlüssel bleiben auf dem Server */
+const BETA=/\/audit\.beta(\/|$)/i.test(location.pathname);
+const BETA_API=location.origin+location.pathname.replace(/(\/audit\.beta)(\/.*)?$/i,'$1/')+'api/ki.php';
+(function(){if(!BETA)return;try{const u=new URL(location.href);const c=u.searchParams.get('code');if(c){localStorage.setItem('aa_beta_code',c.trim());u.searchParams.delete('code');history.replaceState(null,'',u.pathname+u.search+u.hash)}}catch(e){}})();
+function betaCode(ask){let c='';try{c=localStorage.getItem('aa_beta_code')||''}catch(e){}if(!c&&ask){c=(prompt('Beta-Test: Bitte gib deinen persönlichen Tester-Code ein (steht in deiner Einladung).')||'').trim();if(c)try{localStorage.setItem('aa_beta_code',c)}catch(e){}}return c}
+function betaDrop(){try{localStorage.removeItem('aa_beta_code')}catch(e){}}
+function betaFail(r,j){const t=j&&j.error&&j.error.type;if(t==='beta_code'){betaDrop();return{code:'beta_code',message:'Tester-Code ungültig'}}if(t==='beta_limit')return{code:'beta_limit',message:j.error.message};if(t==='upstream_key')return{code:'error',message:j.error.message};return null}
 
 const S={loaded:{},spk:'app',srm:false,sc:'start',prof:null,on:navigator.onLine!==false,obs:[],pts:[],vi:0,pi:0,sheet:false,side:true,tab:'open',ex:null,toast:null,pend:[],rec:false,txt:false,room:null,addr:null,adrForm:false,objs:[],audits:[],aid:1,curSt:'open',sig:'',sw:false,vm:null,cfg:false,lang:'de',adrFocus:'a1',pf:[],sug:null,spellOn:true,spell:{},spellAsk:false,cur:{name:defName(),named:false}};
 const nextSc=()=>{saveProf();S.pickProf=false;return S.objs.length?'obj':'walk'};
@@ -541,8 +548,9 @@ function AKS(){let o=null;try{o=JSON.parse(localStorage.getItem('aa_aikeys')||'n
 function aiUse(){try{return localStorage.getItem('aa_aiuse')||''}catch(e){return''}}
 /* V92: Auswertung nur mit Claude. Ein OpenAI-Schlüssel gehört zur Spracherkennung (ChatGPT als Auswertung: Entscheid später, Code bleibt vorhanden) */
 (function mig92(){try{if(localStorage.getItem('aa_mig92'))return;const o=AKS();if(o.openai&&o.openai.key){let st={};try{st=JSON.parse(localStorage.getItem('aa_stt')||'null')||{}}catch(e){}if(!st.key)localStorage.setItem('aa_stt',JSON.stringify({key:o.openai.key}));delete o.openai;localStorage.setItem('aa_aikeys',JSON.stringify(o));const c=o.anthropic&&o.anthropic.key?{p:'anthropic',...o.anthropic}:null;localStorage.setItem('aa_ai',JSON.stringify(c))}localStorage.removeItem('aa_aiuse');localStorage.setItem('aa_mig92','1')}catch(e){}})();
-const AIK=()=>{const o=AKS();return o.anthropic&&o.anthropic.key?{p:'anthropic',...o.anthropic}:null};
-function aksPut(o){try{localStorage.setItem('aa_aikeys',JSON.stringify(o));localStorage.setItem('aa_ai',JSON.stringify(AIK()))}catch(e){}}
+const AIK0=()=>{const o=AKS();return o.anthropic&&o.anthropic.key?{p:'anthropic',...o.anthropic}:null};
+const AIK=()=>AIK0()||(BETA?{p:'anthropic',key:'beta',m:'claude-haiku-5-5',beta:1}:null);
+function aksPut(o){try{localStorage.setItem('aa_aikeys',JSON.stringify(o));localStorage.setItem('aa_ai',JSON.stringify(AIK0()))}catch(e){}}
 function aksSet(p,k){const o=AKS();if(k&&k.key)o[p]={key:k.key,m:k.m||'',exp:k.exp||''};else delete o[p];aksPut(o)}
 let SMPp=null,SMPv=null;
 function smp(){return SMPp||(SMPp=(async()=>{let r=null;try{if(typeof claude!=='undefined'&&claude&&claude.use)r=await claude.use('sample')}catch(e){r=null}SMPv=!!r;return r})())}
@@ -555,8 +563,9 @@ async function byok(k,p,o){const imgs=o.images||[];const sys='Antworte ausschlie
   r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+k.key},body:JSON.stringify({model:k.m||'gpt-4o-mini',response_format:{type:'json_object'},messages:[{role:'system',content:sys},{role:'user',content}]})});
   j=await r.json().catch(()=>null);if(!r.ok)throw fail(r,j);cLog({p:'openai',k:'ai',m:k.m||'gpt-4o-mini',i:(j.usage&&j.usage.prompt_tokens)||0,o:(j.usage&&j.usage.completion_tokens)||0});return pj(j.choices[0].message.content)}
  const content=[...imgs.map(u=>({type:'image',source:{type:'base64',media_type:(String(u).match(/^data:([^;]+)/)||[])[1]||'image/jpeg',data:String(u).split(',')[1]}})),{type:'text',text:p}];
- r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':k.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:k.m||'claude-haiku-5-5',max_tokens:2500,system:sys,messages:[{role:'user',content}]})});
- j=await r.json().catch(()=>null);if(!r.ok)throw fail(r,j);{const u=j.usage||{};cLog({p:'claude',k:'ai',m:k.m||'claude-haiku-5-5',i:(u.input_tokens||0)+(u.cache_read_input_tokens||0)+(u.cache_creation_input_tokens||0),o:u.output_tokens||0})}return pj((j.content||[]).map(c=>c.text||'').join(''))
+ if(k.beta&&!betaCode(true))throw{code:'beta_code',message:'Kein Tester-Code eingegeben'};
+ r=await fetch(k.beta?BETA_API:'https://api.anthropic.com/v1/messages',{method:'POST',headers:k.beta?{'content-type':'application/json','x-beta-code':betaCode()}:{'content-type':'application/json','x-api-key':k.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:k.m||'claude-haiku-5-5',max_tokens:2500,system:sys,messages:[{role:'user',content}]})});
+ j=await r.json().catch(()=>null);if(!r.ok)throw (k.beta&&betaFail(r,j))||fail(r,j);{const u=j.usage||{};cLog({p:'claude',k:'ai',m:k.m||'claude-haiku-5-5',i:(u.input_tokens||0)+(u.cache_read_input_tokens||0)+(u.cache_creation_input_tokens||0),o:u.output_tokens||0})}return pj((j.content||[]).map(c=>c.text||'').join(''))
  }catch(e){if(e&&e.code)throw e;throw{code:'offline',message:'Keine Verbindung zum KI-Anbieter.'}}}
 function aiNote(e){S.aiLast={ok:!e,t:Date.now(),m:e?((e.code==='expired'?'Schlüssel abgelaufen':e.code==='bad_key'?'Schlüssel abgelehnt (abgelaufen oder gelöscht?)':e.code==='offline'?'Keine Verbindung zum Anbieter':e.code==='rate_limited'?'Anbieter ausgelastet oder Guthaben aufgebraucht':e.code==='invalid_json'?'Antwort nicht lesbar':'Fehler')+(e.message?': '+String(e.message).slice(0,140):'')):''}}
 async function aiProv(){const s=await smp();
@@ -566,7 +575,7 @@ async function aiProv(){const s=await smp();
  const k=AIK();if(k&&k.key)return{kind:k.p,json:async(p,o)=>{try{const r=await byok(k,p,o||{});aiNote(null);return r}catch(e){if(e&&e.code==='bad_key'&&keyDays()!=null&&keyDays()<=0)e={code:'expired',message:'Der Schlüssel ist seit '+fmtD(k.exp)+' abgelaufen.'};aiNote(e);throw e}}};
  return null}
 async function aiGet(){const sm=await aiProv();if(!sm)toast('Keine KI verbunden. Trage in den Einstellungen unter „KI“ deinen eigenen Schlüssel ein.');return sm}
-function aiErr(e){const c=e&&e.code;toast(c==='not_granted'?'KI-Zugriff wurde nicht freigegeben.':c==='bad_key'?'Der KI-Schlüssel wurde abgelehnt. Bitte in den Einstellungen prüfen.':c==='offline'?'Keine Verbindung zur KI. Bitte Internet prüfen.':c==='rate_limited'?'Die KI ist gerade ausgelastet. Bitte gleich nochmals versuchen.':'KI-Vorschlag nicht möglich. Bitte später erneut versuchen.')}
+function aiErr(e){const c=e&&e.code;if(c==='beta_code'){toast('Tester-Code ungültig oder fehlt. Beim nächsten Versuch wird er neu abgefragt.');return}if(c==='beta_limit'){toast(e.message||'Tageslimit erreicht.');return}toast(c==='not_granted'?'KI-Zugriff wurde nicht freigegeben.':c==='bad_key'?'Der KI-Schlüssel wurde abgelehnt. Bitte in den Einstellungen prüfen.':c==='offline'?'Keine Verbindung zur KI. Bitte Internet prüfen.':c==='rate_limited'?'Die KI ist gerade ausgelastet. Bitte gleich nochmals versuchen.':'KI-Vorschlag nicht möglich. Bitte später erneut versuchen.')}
 async function aiSuggest(){oeSync();const x=S.obs[S.oe];if(!x)return;(S.oeC||[]).forEach(l=>{if(l.k==='m'&&l.ai&&(l.b||'')!==(l.ain||'')){l.a='';l.ai=false}});const sm=await aiGet();if(!sm)return;
  S.aiBusy=true;R();let r;try{r=await aiCore(sm,x,S.oeC,{anfElse:S.obs.some((y,k)=>k!==S.oe&&(y.calc||[]).some(l=>l.k==='f'))})}catch(e){S.aiBusy=false;aiErr(e);R();return}
  S.aiBusy=false;if(x.mehr)S.oeM=true;toast(r.n||r.hs?(r.n?r.n+(r.n===1?' Wert':' Werte')+' von der KI geschätzt':'KI-Hinweise')+(r.hs?', '+r.hs+(r.hs===1?' Hinweis':' Hinweise'):'')+'. Bitte prüfen.':'Die KI hat nichts Neues vorgeschlagen.');R()}
@@ -1031,8 +1040,8 @@ function aiStat(k){
  const ex=k.exp?(d<0?'abgelaufen seit '+fmtD(k.exp):'gültig bis '+fmtD(k.exp)):'Ablaufdatum nicht hinterlegt';
  return`<div class="ob" style="background:var(--${cb});border:2px solid var(--${c});margin-top:10px"><b style="color:var(--${c});font-size:17px">${t}</b><div class="sm" style="margin-top:4px">${esc(x)}</div>
  <div class="sm" style="margin-top:6px;color:var(--ink)"><b>Auswertung:</b> <span>${pn}</span> · <span data-nt>…${esc(k.key.slice(-4))}</span>${k.m?` · <span data-nt>${esc(k.m)}</span>`:''} · <span>${ex}</span></div>${sttLine()}</div>`}
-function sttLine(){const s2=STT(),sk=sttKey();return`<div class="sm" style="margin-top:3px;color:var(--ink)"><b>Spracherkennung:</b> ${sk?`<span>OpenAI</span> · <span data-nt>…${esc(sk.slice(-4))}</span>`:'<span style="color:var(--y)">nicht eingerichtet (optional)</span>'}</div>`}
-function aiCfg(){if(SMPv)return`<h3 style="font-size:15px;margin:14px 0 2px">KI-Verbindung</h3><div class="ob" style="background:var(--acb);border-color:var(--ac);margin-top:8px"><b style="color:var(--ac)">✓ Claude ist verbunden</b><div class="sm" style="margin-top:4px">In dieser Ansicht läuft die KI über dein Claude-Konto. Hier brauchst du keinen Schlüssel, und hier kann auch keiner eingetragen werden.</div></div><p class="sm" style="margin:10px 0 0">Deinen API-Schlüssel trägst du in der installierten App auf dem Handy oder Computer ein (Symbol auf dem Home-Bildschirm).</p>`;const k=AIK()||{};const p='anthropic';const A=AKS(),sl=A[p]||{};const same=!!sl.key;const both=false;
+function sttLine(){const s2=STT(),sk=sttKey();if(sk==='beta')return`<div class="sm" style="margin-top:3px;color:var(--ink)"><b>Spracherkennung:</b> inklusive (Beta-Test)</div>`;return`<div class="sm" style="margin-top:3px;color:var(--ink)"><b>Spracherkennung:</b> ${sk?`<span>OpenAI</span> · <span data-nt>…${esc(sk.slice(-4))}</span>`:'<span style="color:var(--y)">nicht eingerichtet (optional)</span>'}</div>`}
+function aiCfg(){if(BETA&&!AIK0()){const bc=betaCode();return`<h3 style="font-size:15px;margin:14px 0 2px">KI-Verbindung</h3><div class="ob" style="background:var(--acb);border-color:var(--ac);margin-top:8px"><b style="color:var(--ac)">✓ Beta-Test: KI ist inklusive</b><div class="sm" style="margin-top:4px">Auswertung und Spracherkennung laufen über den Server von Range. Du brauchst keinen eigenen Schlüssel.</div><div class="sm" style="margin-top:6px">Tester-Code: ${bc?'<span data-nt>…'+esc(bc.slice(-3))+'</span>':'<span style="color:var(--y)">noch nicht eingegeben</span>'}</div></div><button class="sec" data-a="betacode" style="width:100%;margin:10px 0 4px">Tester-Code ${bc?'ändern':'eingeben'}</button>`}if(SMPv)return`<h3 style="font-size:15px;margin:14px 0 2px">KI-Verbindung</h3><div class="ob" style="background:var(--acb);border-color:var(--ac);margin-top:8px"><b style="color:var(--ac)">✓ Claude ist verbunden</b><div class="sm" style="margin-top:4px">In dieser Ansicht läuft die KI über dein Claude-Konto. Hier brauchst du keinen Schlüssel, und hier kann auch keiner eingetragen werden.</div></div><p class="sm" style="margin:10px 0 0">Deinen API-Schlüssel trägst du in der installierten App auf dem Handy oder Computer ein (Symbol auf dem Home-Bildschirm).</p>`;const k=AIK()||{};const p='anthropic';const A=AKS(),sl=A[p]||{};const same=!!sl.key;const both=false;
  return`${aiStat(k)}${SMPv?'':`<button class="${k.key?'sec':'pri'}" data-a="cfgai" style="width:100%;margin:12px 0 4px;font-weight:600">${k.key?'Schlüssel neu einrichten (geführt)':'KI einrichten (geführt, ca. 3 Minuten)'}</button>`}${acc('ai_adv','KI-Verbindung (für Fortgeschrittene)',k.key?'✓ Claude · …'+esc(k.key.slice(-4)):'Claude-Schlüssel von Hand eintragen',`<h3 style="font-size:15px;margin:4px 0 2px;display:none">KI-Verbindung${SMPv?'':' (für Fortgeschrittene)'}</h3><p class="sm" style="margin:0 0 8px">${SMPv?'In dieser Ansicht ist Claude bereits verbunden. Einen eigenen Schlüssel brauchst du nur für die App ausserhalb von Claude.':'Für die Auswertung braucht die App einen Claude-Schlüssel von Anthropic. Den optionalen OpenAI-Schlüssel für die Spracherkennung trägst du weiter unten ein.'}</p>
  
  <p class="sm" style="margin:0 0 8px">${same?'✓ Claude-Schlüssel gespeichert (endet auf <span data-nt>'+esc(sl.key.slice(-4))+'</span>).':'Noch kein Claude-Schlüssel gespeichert.'}</p>
@@ -1056,15 +1065,15 @@ async function aiSave(){const p='anthropic';const old={p,...(AKS()[p]||{})};cons
  finally{S.aiTest=false;R()}}
 /* Sprachaufnahme in Text umwandeln (OpenAI) */
 const STT=()=>{try{return JSON.parse(localStorage.getItem('aa_stt')||'null')||{}}catch(e){return{}}};
-function sttKey(){const s2=STT();return s2.key||null}
+function sttKey(){const s2=STT();return s2.key||(BETA?'beta':null)}
 function trCan(){return!!(sttKey()&&S.vm&&S.vm.blob)}
 /* V89: Geräte-Erkennung nur ohne OpenAI-Schlüssel oder wenn die Live-Mitschrift eingeschaltet ist */
 function liveOn(){try{return localStorage.getItem('aa_live')==='1'}catch(e){return false}}
 function devSr(){return!!(window.SpeechRecognition||window.webkitSpeechRecognition)&&(!sttKey()||liveOn())}
 async function sttCall(blob,dur,mdl){const model=mdl||sttModel();const fd=new FormData();const ext=/mp4|m4a/.test(blob.type)?'m4a':/ogg/.test(blob.type)?'ogg':'webm';fd.append('file',blob,'aufnahme.'+ext);fd.append('model',model);const c=spkCode();if(c&&c!=='auto')fd.append('language',c);
  const pr=[S.prof&&S.prof!=='Allgemein'?S.prof:'',S.cur&&S.cur.named?S.cur.name:''].filter(Boolean).join(', ');if(pr)fd.append('prompt','Audit vor Ort. '+pr+'.');
- let r;try{r=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{authorization:'Bearer '+sttKey()},body:fd})}catch(e){const er=new Error('offline');er.code='offline';throw er}
- const j=await r.json().catch(()=>null);if(!r.ok){if(model!=='whisper-1'&&(r.status===400||r.status===404)&&/model/i.test(j&&j.error&&j.error.message||''))return sttCall(blob,dur,'whisper-1');const er=new Error(j&&j.error&&j.error.message||'HTTP '+r.status);er.code=r.status===401?'bad_key':'http';throw er}cLog({p:'openai',k:'stt',m:model,s:dur||Math.max(1,blob.size/16000)});return(j&&j.text||'').trim()}
+ let r;try{r=await fetch(sttKey()==='beta'?BETA_API+'?t=stt':'https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:sttKey()==='beta'?{'x-beta-code':betaCode(true)}:{authorization:'Bearer '+sttKey()},body:fd})}catch(e){const er=new Error('offline');er.code='offline';throw er}
+ const j=await r.json().catch(()=>null);if(!r.ok){if(model!=='whisper-1'&&(r.status===400||r.status===404)&&/model/i.test(j&&j.error&&j.error.message||''))return sttCall(blob,dur,'whisper-1');const er=new Error(j&&j.error&&j.error.message||'HTTP '+r.status);er.code=r.status===401?'bad_key':'http';if(sttKey()==='beta'){const bf=betaFail(r,j);if(bf)er.code=bf.code}throw er}cLog({p:'openai',k:'stt',m:model,s:dur||Math.max(1,blob.size/16000)});return(j&&j.text||'').trim()}
 /* ===== V117: Begehungs-Modus – Sprechen und gleichzeitig fotografieren, Fotos mit Zeitstempel ===== */
 function recLim(){try{const v=+localStorage.getItem('aa_bglim');return[120,300,600].includes(v)?v:300}catch(e){return 300}}
 const fmtS=t=>{t=Math.max(0,Math.round(t||0));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
@@ -1121,8 +1130,8 @@ async function bgClose(){if(!BG.on)return;bgMsg('Wird gespeichert …');await bg
 /* Transkript mit Zeitstempeln (Whisper), damit Fotos, Text und Ton zusammenpassen */
 async function sttCallV(blob,dur){const fd=new FormData();const ext=/mp4|m4a/.test(blob.type)?'m4a':/ogg/.test(blob.type)?'ogg':'webm';fd.append('file',blob,'aufnahme.'+ext);fd.append('model','whisper-1');fd.append('response_format','verbose_json');fd.append('timestamp_granularities[]','segment');const c=spkCode();if(c&&c!=='auto')fd.append('language',c);
  const pr=[S.prof&&S.prof!=='Allgemein'?S.prof:'',S.cur&&S.cur.named?S.cur.name:''].filter(Boolean).join(', ');if(pr)fd.append('prompt','Audit vor Ort. '+pr+'.');
- let r;try{r=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{authorization:'Bearer '+sttKey()},body:fd})}catch(e){const er=new Error('offline');er.code='offline';throw er}
- const j=await r.json().catch(()=>null);if(!r.ok){const er=new Error(j&&j.error&&j.error.message||'HTTP '+r.status);er.code=r.status===401?'bad_key':'http';throw er}cLog({p:'openai',k:'stt',m:'whisper-1',s:dur||Math.max(1,blob.size/4000)});
+ let r;try{r=await fetch(sttKey()==='beta'?BETA_API+'?t=stt':'https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:sttKey()==='beta'?{'x-beta-code':betaCode(true)}:{authorization:'Bearer '+sttKey()},body:fd})}catch(e){const er=new Error('offline');er.code='offline';throw er}
+ const j=await r.json().catch(()=>null);if(!r.ok){const er=new Error(j&&j.error&&j.error.message||'HTTP '+r.status);er.code=r.status===401?'bad_key':'http';if(sttKey()==='beta'){const bf=betaFail(r,j);if(bf)er.code=bf.code}throw er}cLog({p:'openai',k:'stt',m:'whisper-1',s:dur||Math.max(1,blob.size/4000)});
  return{text:(j&&j.text||'').trim(),seg:(j&&Array.isArray(j.segments)?j.segments:[]).map(x=>[+(+x.start).toFixed(1),+(+x.end).toFixed(1),String(x.text||'').trim()]).filter(x=>x[2])}}
 /* Text mit Foto-Markierungen für die KI */
 function bgMarked(o){const P=(o.pics||[]).map((p,i)=>({i:i+1,t:p.t}));if(!o.seg||!o.seg.length)return(o.t||'')+(P.length?'\n'+P.map(p=>'[Foto '+p.i+' bei '+fmtS(p.t)+']').join(' '):'');
@@ -1816,6 +1825,7 @@ document.addEventListener('click',e=>{
  else if(a==='cfg'){S.cfg=true;S.cfgTab=S.sc==='calc'?'calc':(S.cfgTab||'lang')}
  else if(a==='cfgtab'){if(v==='bak')S.bak=undefined;if(S.cfgTab==='calc'&&ratesDirty()){S.rdr={mon:gv('dr_mon'),srv:gv('dr_srv'),km:gv('dr_km')};S.cf='rates';S.cfAfter='tab:'+v}else S.cfgTab=v}
  else if(a==='cfgai'){wzOpen(aiOn()?3:1);return}
+ else if(a==='betacode'){const c=(prompt('Tester-Code eingeben:',betaCode()||'')||'').trim();if(c){try{localStorage.setItem('aa_beta_code',c)}catch(e){}fetch(BETA_API+'?t=check',{headers:{'x-beta-code':c}}).then(r=>toast(r.ok?'Tester-Code gültig. Die KI ist bereit.':'Dieser Tester-Code ist ungültig.')).catch(()=>toast('Keine Verbindung zum Server.'))}R();return}
  else if(a==='wzx'){S.wz=null}
  else if(a==='wzgo'){if(S.wz){S.wz.st=+v;S.wz.err=''}}
  else if(a==='wzp'){if(S.wz)S.wz.p=v}

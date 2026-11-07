@@ -5,6 +5,8 @@ name: Auf Strato veröffentlichen
 #  - zusätzlich als feste Kopie nach /audit/v/<Version>  (zum Ansehen und Zurückspringen im Dashboard)
 #  - Eintrag in die Update-Historie
 # Secrets: STRATO_HOST, STRATO_USER, STRATO_PASS, optional ADMIN_PASS (Passwort fürs Dashboard).
+# Beta (go-range.de/audit.Beta, KI inklusive): BETA_ANTHROPIC_KEY, optional BETA_OPENAI_KEY,
+#   BETA_CODES = eine Zeile pro Tester: Name=Code   (die Schlüssel landen nur auf dem Server, nie in der App)
 on:
   push:
     branches: [main]
@@ -30,6 +32,9 @@ jobs:
       STRATO_USER: ${{ secrets.STRATO_USER }}
       STRATO_PASS: ${{ secrets.STRATO_PASS }}
       ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
+      BETA_ANTHROPIC_KEY: ${{ secrets.BETA_ANTHROPIC_KEY }}
+      BETA_OPENAI_KEY: ${{ secrets.BETA_OPENAI_KEY }}
+      BETA_CODES: ${{ secrets.BETA_CODES }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -113,6 +118,36 @@ jobs:
           lftp -e "set sftp:auto-confirm yes; set net:max-retries 3; set net:timeout 30; \
             mkdir -p -f audit; mirror -R --no-perms site/ audit/; bye" \
             -u "$STRATO_USER","$STRATO_PASS" "sftp://$STRATO_HOST"
+      - name: Beta zusammenstellen und nach /audit.Beta hochladen
+        if: steps.chk.outputs.ok == '1' && env.BETA_ANTHROPIC_KEY != '' && env.BETA_CODES != ''
+        run: |
+          set -e
+          mkdir -p beta
+          cp index.html sw.js *.png beta/
+          cp -r web/api beta/api
+          rm -rf beta/api/_data/deploys beta/api/_data/current.json beta/api/_data/admin_hash
+          python3 - <<'PY2'
+          import json
+          m=json.load(open('manifest.webmanifest',encoding='utf-8'))
+          m['name']='Audit & Kalkulationstool (Beta)'; m['short_name']='Audit Beta'
+          json.dump(m,open('beta/manifest.webmanifest','w',encoding='utf-8'),ensure_ascii=False,indent=1)
+          PY2
+          php -r '
+            $codes=[];
+            foreach (preg_split("/[\r\n,;]+/", getenv("BETA_CODES")) as $l) { $l=trim($l); if ($l==="") continue;
+              [$n,$c]=array_pad(explode("=",$l,2),2,""); if (trim($c)==="") { $c=$n; $n="Tester ".(count($codes)+1); }
+              $codes[trim($n)]=trim($c); }
+            $s=["anthropic"=>getenv("BETA_ANTHROPIC_KEY"),"openai"=>getenv("BETA_OPENAI_KEY")?:"","codes"=>$codes,"day_ai"=>150,"day_stt"=>120,"models"=>["claude-haiku-5-5","claude-sonnet-5-5"]];
+            file_put_contents("beta/api/_data/beta_secrets.php","<?php\nreturn ".var_export($s,true).";\n");
+            fwrite(STDERR, count($codes)." Tester-Codes\n");'
+          lftp -e "set sftp:auto-confirm yes; set net:max-retries 3; set net:timeout 30; \
+            mkdir -p -f audit.Beta; mirror -R --no-perms beta/ audit.Beta/; bye" \
+            -u "$STRATO_USER","$STRATO_PASS" "sftp://$STRATO_HOST"
+          rm -f beta/api/_data/beta_secrets.php
+          sleep 2
+          curl -sS -m 20 -o /dev/null -w "beta: %{http_code}\n" "https://go-range.de/audit.Beta/"
+          curl -sS -m 20 -o /dev/null -w "beta-ki ohne Code (soll 401): %{http_code}\n" "https://go-range.de/audit.Beta/api/ki.php?t=check"
+          curl -sS -m 20 -o /dev/null -w "beta-secrets (soll 403): %{http_code}\n" "https://go-range.de/audit.Beta/api/_data/beta_secrets.php"
       - name: Prüfen
         if: steps.chk.outputs.ok == '1'
         run: |
