@@ -166,6 +166,14 @@ button,.chip,.lnk,.lg,.li,.cb,.cbw{touch-action:manipulation;-webkit-user-select
  .cnt .n{padding:6px 10px}
  #side{display:none!important}
 }
+
+/* V157: schlanker, dezenter Scrollbalken in App-Farbe statt grauem Standardbalken des Browsers */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background-color:color-mix(in srgb,var(--ac) 35%,transparent);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background-color:color-mix(in srgb,var(--ac) 65%,transparent)}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+@supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--ac) 40%,transparent) transparent}}
 </style></head><body><div id="root"><div class="ph" id="ph"></div><aside id="side"></aside></div>
 <script>/* V145: Umzug auf go-range.de/audit, Versions-Vorschau, Zugriffsstatistik */
 (function(){
@@ -290,7 +298,7 @@ addEventListener('load',()=>{if(!mh&&!isOld)setTimeout(hit,1500)});
 })();
 </script>
 <script>
-const VER=156;
+const VER=157;
 /* V154: Beta-Version (go-range.de/audit.Beta) – KI inklusive über den eigenen Server, Schlüssel bleiben auf dem Server */
 const BETA=/\/audit\.beta(\/|$)/i.test(location.pathname);
 const BETA_API=location.origin+location.pathname.replace(/(\/audit\.beta)(\/.*)?$/i,'$1/')+'api/ki.php';
