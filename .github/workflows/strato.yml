@@ -6,12 +6,13 @@ name: Auf Strato veröffentlichen
 #  - Eintrag in die Update-Historie
 # Secrets: STRATO_HOST, STRATO_USER, STRATO_PASS, optional ADMIN_PASS (Passwort fürs Dashboard).
 # Beta (go-range.de/audit.Beta, KI inklusive): BETA_ANTHROPIC_KEY, optional BETA_OPENAI_KEY,
+#   Die Beta bleibt auf der Version in beta-version.txt stehen (wird nur auf Anweisung erhöht).
 #   BETA_CODES = eine Zeile pro Tester: Name=Code*Anzahl  (Name und *Anzahl freiwillig, Standard 150 pro Tag;
 #   die Anzahl gilt für Auswertungen und Spracherkennungen; die Schlüssel landen nur auf dem Server, nie in der App)
 on:
   push:
     branches: [main]
-    paths: ['index.html', 'sw.js', 'manifest.webmanifest', '*.png', 'web/**', '.github/workflows/strato.yml']
+    paths: ['index.html', 'sw.js', 'manifest.webmanifest', '*.png', 'web/**', 'beta-version.txt', '.github/workflows/strato.yml']
   workflow_dispatch:
     inputs:
       backfill:
@@ -124,12 +125,19 @@ jobs:
         run: |
           set -e
           mkdir -p beta
-          cp index.html sw.js *.png beta/
+          # Beta bleibt auf der freigegebenen Version stehen (beta-version.txt), nicht auf dem neuesten Prototyp
+          BV=$(tr -dc 0-9 < beta-version.txt)
+          SHA=$(git log --format='%H %s' -- index.html | grep -E "^[0-9a-f]+ Version $BV:" | head -n1 | cut -d' ' -f1)
+          if [ -z "$SHA" ]; then echo "FEHLER: Version $BV nicht im Archiv gefunden - Beta bleibt unverändert"; exit 1; fi
+          for f in index.html sw.js manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png apple-touch-icon.png; do git show "$SHA:$f" > "beta/$f" 2>/dev/null || cp "$f" "beta/$f"; done
+          grep -q "const VER=$BV;" beta/index.html || { echo "FEHLER: Version passt nicht"; exit 1; }
+          sed -i 's/Prototyp V\${VER}/BETA V${VER}/' beta/index.html
+          echo "Beta-Stand: BETA V$BV (aus $SHA)"
           cp -r web/api beta/api
           rm -rf beta/api/_data/deploys beta/api/_data/current.json beta/api/_data/admin_hash
           python3 - <<'PY2'
           import json
-          m=json.load(open('manifest.webmanifest',encoding='utf-8'))
+          m=json.load(open('beta/manifest.webmanifest',encoding='utf-8'))
           m['name']='Audit & Kalkulationstool (Beta)'; m['short_name']='Audit Beta'
           json.dump(m,open('beta/manifest.webmanifest','w',encoding='utf-8'),ensure_ascii=False,indent=1)
           PY2
