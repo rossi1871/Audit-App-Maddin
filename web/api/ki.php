@@ -23,9 +23,10 @@ $SEC = require $secFile;
 
 /* ---------- Tester-Code prüfen ---------- */
 $code = trim((string)($_SERVER['HTTP_X_BETA_CODE'] ?? ''));
-$tester = null;
+$tester = null; $LIM = (int)($SEC['day'] ?? 150);
 foreach (($SEC['codes'] ?? []) as $name => $c) {
-    if ($code !== '' && hash_equals((string)$c, $code)) { $tester = (string)$name; break; }
+    $cc = is_array($c) ? (string)$c['c'] : (string)$c;   // ['c' => Code, 'n' => Auswertungen pro Tag]
+    if ($code !== '' && hash_equals($cc, $code)) { $tester = (string)$name; if (is_array($c) && !empty($c['n'])) $LIM = (int)$c['n']; break; }
 }
 if ($tester === null) jsonOut(['error' => ['type' => 'beta_code', 'message' => 'Tester-Code ungültig.']], 401);
 
@@ -34,8 +35,8 @@ if ($t === 'check') jsonOut(['ok' => true, 'name' => $tester]);
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') jsonOut(['error' => ['type' => 'method', 'message' => 'Nur POST.']], 405);
 
 /* ---------- Tageszähler je Tester ---------- */
-$LIM_AI  = (int)($SEC['day_ai'] ?? 150);   // Auswertungen pro Tag und Tester
-$LIM_STT = (int)($SEC['day_stt'] ?? 120);  // Spracherkennungen pro Tag und Tester
+/* eine Zahl für beides: Auswertungen UND Spracherkennungen pro Tag und Code (Standard 150, sonst Code*Anzahl) */
+$LIM_AI = $LIM; $LIM_STT = $LIM;
 $day = date('Y-m-d');
 $uFile = dataDir('beta_usage') . '/' . $day . '.json';
 
