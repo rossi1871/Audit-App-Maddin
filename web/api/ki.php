@@ -31,8 +31,6 @@ foreach (($SEC['codes'] ?? []) as $name => $c) {
 if ($tester === null) jsonOut(['error' => ['type' => 'beta_code', 'message' => 'Tester-Code ungültig.']], 401);
 
 $t = (string)($_GET['t'] ?? '');
-if ($t === 'check') jsonOut(['ok' => true, 'name' => $tester]);
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') jsonOut(['error' => ['type' => 'method', 'message' => 'Nur POST.']], 405);
 
 /* ---------- Tageszähler je Tester ---------- */
 /* eine Zahl für beides: Auswertungen UND Spracherkennungen pro Tag und Code (Standard 150, sonst Code*Anzahl) */
@@ -56,6 +54,10 @@ function usage(string $file, string $who, ?array $add = null): array {
     return $u;
 }
 $u = usage($uFile, $tester);
+/* Tester-Code prüfen und Tageskontingent anzeigen (Zurücksetzen um Mitternacht, Zeitzone Europe/Zurich) */
+if ($t === 'check') jsonOut(['ok' => true, 'name' => $tester, 'limit' => $LIM,
+    'ai' => (int)($u['ai'] ?? 0), 'stt' => (int)($u['stt'] ?? 0), 'reset' => strtotime('tomorrow') * 1000]);
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') jsonOut(['error' => ['type' => 'method', 'message' => 'Nur POST.']], 405);
 
 /* ---------- Weiterleiten ---------- */
 function forward(string $url, array $headers, $body, bool $multipart = false): array {
